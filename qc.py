@@ -1,4 +1,4 @@
-class QuorumCertificate:
+class QC:
     def __init__(self, vote_info, ledger_commit_info, signatures, author, author_signature):
         # VoteInfo record of the QC
         self.vote_info = vote_info
