@@ -1,4 +1,6 @@
 import Pacemaker.initializer as initializer
+from BlockTree.initializer import high_qc
+from Safety.safety import make_timeout
 
 
 def get_round_timer(r):
@@ -16,17 +18,18 @@ def save_consensus_state(self):
 
 def local_timeout_round():
     save_consensus_state()
-    timeout_info = Safety.make_timeout(initializer.current_round, BlockTree.high_qc, initializer.last_round_tc)
+    timeout_info = make_timeout(initializer.current_round, high_qc, initializer.last_round_tc)
     # to do broadCast Timeout_Message()
 
 
 # To Do timeout
-# def process_remote_timeout(tmo):
-#     tmo_info = tmo.tmo_info
-#     if(tmo_info.round < self.current_round)
-#         return None
-#
-#     if(tmo_info.sender)
+def process_remote_timeout(tmo):
+    tmo_info = tmo.tmo_info
+    if(tmo_info.round < initializer.current_round):
+        return None
+
+    return None
+    # if(tmo_info.sender)
 
 def advance_round_tc(tc):
     if tc is None or tc.round < initializer.current_round:

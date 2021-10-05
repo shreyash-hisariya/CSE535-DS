@@ -1,3 +1,6 @@
+import Mempool.intializer as initializer
+
+
 def get_transactions():
-    transactions.add('Transaction 1')
-    return transactions
+    initializer.transactions.append('Transaction 1')
+    return initializer.transactions
