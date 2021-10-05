@@ -1,9 +1,13 @@
 import Ledger
 import BlockTree.initializer as initializer
+import Main.initializer
+from Models.block import Block
 from Models.qc import QC
+
 
 def getMaxRound(qc, high_commit_qc):
     pass
+
 
 def process_qc(qc):
     if qc.ledger_commit_info.commit_state_id != -1:
@@ -27,22 +31,30 @@ def process_vote(v):
         return new_qc
 
 
+'''
+- What will be the initial value for qc and high_qc(vote_info, etc)
+- Author will be the current leader right?
+- data structure for signatures
+- hash function
+- qc is initialized in the process_vote function of block tree
+'''
+
+
 def generate_block(transactions, current_round):
-    return None
-    # author = 0
-    # curr_round = current_round
-    # payload = transactions
-    # qc = initializer.high_qc
+    author = Main.initializer.u
+    curr_round = current_round
+    payload = transactions
+    qc = initializer.high_qc
     # hash_id = hash(author, curr_round, payload, qc.vote_info.id, qc.signatures)
-    # block = Block(author, curr_round, payload, qc, hash_id)
-    # return block
+    hash_id = hash(author, curr_round, payload, None, None)
+    block = Block(author, curr_round, payload, qc, hash_id)
+    return block
 
 
-def prune(self):
-    pass
+def hash(a, b, c, d, e):
+    return str(a) + str(e) + str(b) + str(c) + str(d)
 
-
-def hash(self):
+def prune(a):
     pass
 
 

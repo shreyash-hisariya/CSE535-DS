@@ -61,4 +61,4 @@ def process_new_round_event(last_tc):
         print('this is current leader', initializer.u)
         initializer.b = generate_block(get_transactions(), Pacemaker.initializer.current_round)
         # TO DO broadcast
-        print('Broad cast proposal message')
+        print('Broad cast proposal message', initializer.b.payload)
