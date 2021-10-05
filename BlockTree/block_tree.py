@@ -8,9 +8,8 @@ from Models.qc import QC
 def getMaxRound(qc, high_commit_qc):
     pass
 
-
 def process_qc(qc):
-    if qc.ledger_commit_info.commit_state_id != -1:
+    if qc is not None and qc.ledger_commit_info.commit_state_id != -1:
         Ledger.ledger.commit(qc.vote_info.parent_id)
         prune(initializer.pending_block_tree)
         initializer.high_commit_qc = getMaxRound(qc, initializer.high_commit_qc)
@@ -53,6 +52,7 @@ def generate_block(transactions, current_round):
 
 def hash(a, b, c, d, e):
     return str(a) + str(e) + str(b) + str(c) + str(d)
+
 
 def prune(a):
     pass

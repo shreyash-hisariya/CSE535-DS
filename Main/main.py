@@ -1,7 +1,9 @@
 import Pacemaker.initializer
 from BlockTree.block_tree import generate_block, process_qc, process_vote, execute_and_insert
+from BlockTree.initializer import high_commit_qc
 from LeaderElection.leader_election import get_leader, update_leaders
 from Mempool.mempool import get_transactions
+from Models.proposal_message import ProposalMessage
 from Pacemaker.pacemaker import local_timeout_round, advance_round_qc, advance_round_tc, process_remote_timeout
 import Main.initializer as initializer
 from Safety.safety import make_vote
@@ -23,20 +25,22 @@ def process_certificate_qc(self, qc):
     update_leaders(qc)
     advance_round_qc(qc.vote_info.round)
 
-
+'''
+- Initially qc, high_commit_qc is None?
+'''
 def process_proposal_msg(P):
     process_certificate_qc(P.block.qc)
-    process_certificate_qc(P.high_commit_qc)
-    advance_round_tc(P.last_round_tc)
-    initializer.round = Pacemaker.initializer.current_round
-    initializer.leader = get_leader(initializer.current_leader)
-    if P.block.round != initializer.round and P.sender != initializer.leader and P.block.author != initializer.leader:
-        return
-    execute_and_insert(P)
-    initializer.vote_msg = make_vote(P.block, P.last_round_tc)
-    if initializer.vote_msg is None:
-        # TO DO
-        pass
+    # process_certificate_qc(P.high_commit_qc)
+    # advance_round_tc(P.last_round_tc)
+    # initializer.round = Pacemaker.initializer.current_round
+    # initializer.leader = get_leader(initializer.current_leader)
+    # if P.block.round != initializer.round and P.sender != initializer.leader and P.block.author != initializer.leader:
+    #     return
+    # execute_and_insert(P)
+    # initializer.vote_msg = make_vote(P.block, P.last_round_tc)
+    # if initializer.vote_msg is None:
+    #     # TO DO
+    #     pass
 
 
 def process_timeout_msg(M):
@@ -61,4 +65,7 @@ def process_new_round_event(last_tc):
         print('this is current leader', initializer.u)
         initializer.b = generate_block(get_transactions(), Pacemaker.initializer.current_round)
         # TO DO broadcast
+        p = ProposalMessage(initializer.b, last_tc, high_commit_qc)
         print('Broad cast proposal message', initializer.b.payload)
+        # for now calling the process_proposal_msg directly
+        process_proposal_msg(p)
