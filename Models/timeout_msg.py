@@ -4,5 +4,5 @@ class TimeoutMsg:
         self.timeout_info = timeout_info
         # TC for last round if nothing was committed in the last round, else None
         self.last_round_tc = last_round_tc
-        # QC of the highest known committed transaction to the ledger
+        # QC of the highest known committed transaction to the Ledger
         self.high_commit_qc = high_commit_qc

@@ -2,7 +2,7 @@ class QC:
     def __init__(self, vote_info, ledger_commit_info, signatures, author, author_signature):
         # VoteInfo record of the QC
         self.vote_info = vote_info
-        # Speculated ledger commit info if the block is committed
+        # Speculated Ledger commit info if the block is committed
         self.ledger_commit_info = ledger_commit_info
         # Quorum of signatures
         self.signatures = signatures
