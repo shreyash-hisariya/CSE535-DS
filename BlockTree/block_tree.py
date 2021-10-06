@@ -9,7 +9,7 @@ def getMaxRound(qc, high_commit_qc):
     pass
 
 def process_qc(qc):
-    if qc is not None and qc.ledger_commit_info.commit_state_id != -1:
+    if qc is not None and qc.ledger_commit_info.commit_state_id is None:
         Ledger.ledger.commit(qc.vote_info.parent_id)
         prune(initializer.pending_block_tree)
         initializer.high_commit_qc = getMaxRound(qc, initializer.high_commit_qc)
