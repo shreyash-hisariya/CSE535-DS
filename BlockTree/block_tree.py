@@ -1,3 +1,4 @@
+
 import Ledger
 import BlockTree.initializer as initializer
 import Main.initializer
@@ -21,10 +22,19 @@ def execute_and_insert(b):
 def process_vote(v):
     process_qc(v.high_commit_qc)
     vote_idx = hash(v.ledger_commit_info)
-    vote_count = get_vote_count(v, vote_idx)
-    if vote_count == 4:
-        new_qc = QC(v.vote_info, v.state_id, initializer.pending_votes)
+    initializer.pending_votes[vote_idx]=initializer.pending_votes[vote_idx]+v.signature
+    if len(initializer.pending_votes[vote_idx]) == (2*f)+1:
+        new_qc = QC(v.vote_info, v.state_id, initializer.pending_votes[vote_idx])
         return new_qc
+    return None
+
+# def process_vote(v):
+#     process_qc(v.high_commit_qc)
+#     vote_idx = hash(v.ledger_commit_info)
+#     vote_count = get_vote_count(v, vote_idx)
+#     if vote_count == 4:
+#         new_qc = QC(v.vote_info, v.state_id, initializer.pending_votes)
+#         return new_qc
 
 
 '''
@@ -63,10 +73,6 @@ def prune(parent_block_id):
     for ledger_id in list_of_ledger_ids:
         del Ledger.pending_ledger_states[ledger_id]
 
-
-
-    pass
-
-
-def get_vote_count(v, vote_idx):
-    pass
+#
+# def get_vote_count(v, vote_idx):
+#     pass

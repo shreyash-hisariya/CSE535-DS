@@ -5,14 +5,11 @@ def increase_highest_vote_round(self, round):
 def update_highest_qc_round(self, qc_round):
     self.highest_qc_round = max(qc_round, self.highest_qc_round)
 
-
 def consecutive(self, block_round, round):
     return round + 1 == block_round
 
-
 def safe_to_extend(self, block_round, qc_round, tc):
     return self.consecutive(block_round, tc.round) and qc_round >= max(tc.tmo_high_qc_rounds)
-
 
 def safe_to_vote(self, block_round, qc_round, tc):
     if block_round <= max(self.highest_vote_round, qc_round):
@@ -44,7 +41,6 @@ def make_vote(self, b, last_tc):
         ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, b.qc), hash(vote_info))
         return VoteMsg(vote_info, ledger_commit_info, Block_tree.high_commit_qc)
     return None
-
 
 def make_timeout(self, round, high_qc, last_tc):
     self.qc_round = high_qc.vote_info.round

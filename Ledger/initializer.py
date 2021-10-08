@@ -8,7 +8,7 @@ persistent_ledger_states = defaultdict()
 
 # key is block_id and value is corresponding ledger_state_id.
 
-id_map = orderedDict()
+blockid_ledger_map = orderedDict()
 
 
 
