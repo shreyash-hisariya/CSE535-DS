@@ -9,7 +9,7 @@ def speculate(prev_block_id, block_id, txns):
 
 
 def pending_state(block_id):
-    return pending_ledger_states[block_id]
+    return pending_ledger_states[id_map[block_id]]
 
 
 def commit(block_id):

@@ -22,8 +22,8 @@ def start_event_processing(M):
 
 def process_certificate_qc(qc):
     process_qc(qc)
-    update_leaders(qc)
-    advance_round_qc(qc.vote_info.round)
+    # update_leaders(qc)
+    # advance_round_qc(qc.vote_info.round)
 
 '''
 - Initially qc, high_commit_qc is None?
@@ -31,16 +31,16 @@ def process_certificate_qc(qc):
 def process_proposal_msg(P):
     process_certificate_qc(P.block.qc)
     process_certificate_qc(P.high_commit_qc)
-    advance_round_tc(P.last_round_tc)
-    initializer.round = Pacemaker.initializer.current_round
+    # advance_round_tc(P.last_round_tc)
+    # initializer.round = Pacemaker.initializer.current_round
     initializer.leader = get_leader(initializer.current_leader)
-    if P.block.round != initializer.round and P.sender != initializer.leader and P.block.author != initializer.leader:
-        return
-    execute_and_insert(P)
-    initializer.vote_msg = make_vote(P.block, P.last_round_tc)
-    if initializer.vote_msg is None:
-        # TO DO
-        pass
+    # if P.block.round != initializer.round and P.sender != initializer.leader and P.block.author != initializer.leader:
+    #     return
+    # execute_and_insert(P)
+    # initializer.vote_msg = make_vote(P.block, P.last_round_tc)
+    # if initializer.vote_msg is None:
+    #     # TO DO
+    #     pass
 
 
 def process_timeout_msg(M):

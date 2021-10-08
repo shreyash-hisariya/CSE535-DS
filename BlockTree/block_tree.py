@@ -4,22 +4,19 @@ import Main.initializer
 from Models.block import Block
 from Models.qc import QC
 
-
 def getMaxRound(qc, high_commit_qc):
-    pass
+    return max(qc.vote_info.round,high_commit_qc.vote_info.round)
 
 def process_qc(qc):
-    if qc is not None and qc.ledger_commit_info.commit_state_id is None:
+    if qc is not None and qc.ledger_commit_info.commit_state_id is not None:
         Ledger.ledger.commit(qc.vote_info.parent_id)
-        prune(initializer.pending_block_tree)
+        prune(qc.vote_info.parent_id)
         initializer.high_commit_qc = getMaxRound(qc, initializer.high_commit_qc)
     initializer.high_qc = getMaxRound(qc, initializer.high_qc)
-
 
 def execute_and_insert(b):
     Ledger.ledger.speculate(b.qc.block_id, b.id, b.payload)
     initializer.pending_block_tree.add(b)
-
 
 def process_vote(v):
     process_qc(v.high_commit_qc)
@@ -54,7 +51,20 @@ def hash(a, b, c, d, e):
     return str(a) + str(e) + str(b) + str(c) + str(d)
 
 
-def prune(a):
+def prune(parent_block_id):
+    parent_ledger_state_id = Ledger.id_map[parent_block_id]
+    list_of_ledger_ids=[]
+    for key,val in enumerate(Ledger.id_map):
+        if val == parent_ledger_state_id:
+            break
+        list_of_ledger_ids.append(val)
+
+    # list_of_ledger_ids=[val for key,val in enumerate(Ledger.id_map) ]
+    for ledger_id in list_of_ledger_ids:
+        del Ledger.pending_ledger_states[ledger_id]
+
+
+
     pass
 
 
