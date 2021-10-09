@@ -7,6 +7,6 @@ class Block:
         # Payload of transactions to be committed
         self.payload = payload
         # Quorum certificate of the parent block
-        self.quorum_cert = quorum_cert
+        self.qc = quorum_cert
         # Digest of author, block_round, payload, quorum_cert.vote_info.id, quorum_cert.signatures
         self.block_id = block_id
