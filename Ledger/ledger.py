@@ -11,8 +11,11 @@ def pending_state(block_id):
     return pending_ledger_states[blockid_ledger_map[block_id]]
 
 def commit(block_id):
+    #add persistent_ledger_states to disk
     persistent_ledger_states[blockid_ledger_map[block_id]] = pending_ledger_states[blockid_ledger_map[block_id]]
     del pending_ledger_states[blockid_ledger_map[block_id]]
 
 def committed_block(block_id):
-    pass
+
+    return persistent_ledger_states[blockid_ledger_map[block_id]]
+

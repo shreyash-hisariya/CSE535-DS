@@ -9,6 +9,7 @@ def getMaxRound(qc, high_commit_qc):
     return max(qc.vote_info.round,high_commit_qc.vote_info.round)
 
 def process_qc(qc):
+
     if qc is not None and qc.ledger_commit_info.commit_state_id is not None:
         Ledger.ledger.commit(qc.vote_info.parent_id)
         prune(qc.vote_info.parent_id)
@@ -22,9 +23,10 @@ def execute_and_insert(b):
 def process_vote(v):
     process_qc(v.high_commit_qc)
     vote_idx = hash(v.ledger_commit_info)
-    initializer.pending_votes[vote_idx]=initializer.pending_votes[vote_idx]+v.signature
+    initializer.pending_votes[vote_idx]=initializer.pending_votes[vote_idx].add(v.signature)
     if len(initializer.pending_votes[vote_idx]) == (2*f)+1:
-        new_qc = QC(v.vote_info, v.state_id, initializer.pending_votes[vote_idx])
+        signatures_list=list(initializer.pending_votes[vote_idx])
+        new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,v.sender, v.signature)
         return new_qc
     return None
 
@@ -47,12 +49,12 @@ def process_vote(v):
 
 
 def generate_block(transactions, current_round):
+
     author = Main.initializer.u
     curr_round = current_round
     payload = transactions
     qc = initializer.high_qc
-    # hash_id = hash(author, curr_round, payload, qc.vote_info.id, qc.signatures)
-    hash_id = hash(author, curr_round, payload, None, None)
+    hash_id = hash(author, curr_round, payload, qc.vote_info.id, qc.signatures)
     block = Block(author, curr_round, payload, qc, hash_id)
     return block
 
