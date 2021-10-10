@@ -1,3 +1,5 @@
+# validator
+
 import logging
 
 ID = 0
@@ -15,11 +17,29 @@ class Validator(process):
 
         if self._idx == 1:
             output('Sending Massage from 1')
-            send(('MESSAGE',), to=self._validator_desc[2])
+            send(('PROPOSAL_MESSAGE', 'BOX BOX MAX'), to=self._validator_desc[2])
         await(False)
 
-    def receive(msg=('MESSAGE',)):
-        output("MESSAGE RECEIVED.")
+    def receive(msg=('LOCAL_TIMEOUT',)):
+        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
 
+    def receive(msg=('PROPOSAL_MESSAGE', m)):
+        output("PROPOSAL_MESSAGE RECEIVED - " + m)
+
+    def receive(msg=('VOTE_MESSAGE',)):
+        output("VOTE_MESSAGE RECEIVED.")
+
+    def receive(msg=('TIMEOUT_MESSAGE',)):
+        output("TIMEOUT_MESSAGE RECEIVED.")
+
+    def process_vote_msg(M):
+
+    def process_timeout_msg(M):
+
+    def process_new_round_event(last_tc):
+
+    def process_proposal_msg(P):
+
+    def process_certificate_qc(qc):
 
 

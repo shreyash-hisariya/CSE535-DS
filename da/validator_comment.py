@@ -118,3 +118,15 @@ class Validator(process):
         return (id > s and id <= e)
 
 
+
+    def receive(msg=('LOCAL_TIMEOUT',)):
+        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
+
+    def receive(msg=('PROPOSAL_MESSAGE',)):
+        output("PROPOSAL_MESSAGE RECEIVED.")
+
+    def receive(msg=('VOTE_MESSAGE',)):
+        output("VOTE_MESSAGE RECEIVED.")
+
+    def receive(msg=('TIMEOUT_MESSAGE',)):
+        output("TIMEOUT_MESSAGE RECEIVED.")
