@@ -11,6 +11,7 @@ class Validator(process):
         self._validator_desc = validator_desc
         self._n_validators = n_validators
 
+
     def run():
 
         if self._idx == 1:
