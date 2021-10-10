@@ -1,6 +1,14 @@
 # validator
 
 import logging
+from block_tree import Block_tree
+from ledger import Ledger
+from safety import Safety
+from pacemaker import Pacemaker
+from mempool import Mempool
+from leader_election import Leader_election
+from collections import defaultdict
+from collections import OrderedDict
 
 ID = 0
 PROCESS_ID = 1
@@ -13,6 +21,31 @@ class Validator(process):
         self._validator_desc = validator_desc
         self._n_validators = n_validators
 
+        self.round = 0
+        self.leader = 0
+        self.vote_msg = None
+        self.tc = None
+        self.qc = None
+        self.u = 0
+        self.b = None
+
+        main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,
+        'b' : self.b}
+
+        self.ledger = Ledger(defaultdict(), defaultdict(), OrderedDict())
+        validator_info = {'Main' : main_dict, 'Ledger' : self.ledger}
+        self.block_tree = Block_tree([], {}, None, None, validator_info)
+
+        self.safety = Safety(validator_info)
+
+        validator_info['BlockTree'] = self.block_tree
+        validator_info['Safety'] = self.safety
+        self.pacemaker = Pacemaker(validator_info)
+
+        self.mempool = Mempool(validator_info)
+
+        validator_info['validators'] = self._validator_desc # need to verify
+        self.leader_election = Leader_election(validator_info)
 
     def run():
 
@@ -34,13 +67,17 @@ class Validator(process):
         output("TIMEOUT_MESSAGE RECEIVED.")
 
     def process_vote_msg(M):
+        pass
 
     def process_timeout_msg(M):
+        pass
 
     def process_new_round_event(last_tc):
+        pass
 
     def process_proposal_msg(P):
+        pass
 
     def process_certificate_qc(qc):
-
+        pass
 

@@ -5,9 +5,11 @@
 # }
 
 class Mempool:
-    def __init__(self,transactions,validator_info=None):
+    def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.transactions = transactions# set()  # this will be filled when a validator is initialized via runner
-    def get_transactions():
+        self.transactions = set()  # this will be filled when a validator is initialized via runner
+
+
+    def get_transactions(self,):
         #initializer.transactions.add('Transaction 1')
         return self.transactions

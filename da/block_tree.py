@@ -9,6 +9,7 @@ from Models.qc import QC
 # }
 
 class Block_tree:
+
     def __init__(self,pending_block_tree,pending_votes,high_qc,high_commit_qc,validator_info=None):
         self.validator_info=validator_info
         self.pending_block_tree = pending_block_tree # []  # may need to verify

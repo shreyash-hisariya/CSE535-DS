@@ -5,14 +5,15 @@ import math
 # validator_info {
 #       'Pacemaker' :pacemaker object
 #       'Ledger': ledger object
+#       'validators': validators
 # }
 class Leader_election:
-    def __init__(self,validators,window_size,exclude_size,reputation_leaders,validator_info=None):
+    def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.validators = validators #[1]
-        self.window_size = window_size #0
-        self.exclude_size = exclude_size #0
-        self.reputation_leaders = reputation_leaders# {}
+
+        self.window_size = 0
+        self.exclude_size = 1
+        self.reputation_leaders = {}
 
     def elect_reputation_leader(self,qc):
         active_validators=[]
@@ -51,4 +52,4 @@ class Leader_election:
 
 
     def round_robin(self,curr_round):
-        return self.validators[ math.floor(curr_round/2) % len(self.validators)]
+        return self.validator_info["validators"][ math.floor(curr_round/2) % len(self.validator_info["validators"])]

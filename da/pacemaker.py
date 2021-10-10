@@ -7,11 +7,11 @@
 # }
 
 class Pacemaker:
-    def __init__(self,current_round,last_round_tc,pending_timeouts,validator_info=None):
+    def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.current_round = current_round #0
-        self.last_round_tc = last_round_tc # None
-        self.pending_timeouts = pending_timeouts# {}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
+        self.current_round = 0
+        self.last_round_tc = None
+        self.pending_timeouts = {}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
 
 
     def get_round_timer(self,r):

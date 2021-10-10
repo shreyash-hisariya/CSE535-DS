@@ -1,5 +1,5 @@
 from Main.main import process_new_round_event
-from Models.timeout_certificate import TimeoutCertificate
+from da.Models.timeout_certificate import TimeoutCertificate
 
 
 def main():

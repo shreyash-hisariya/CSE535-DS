@@ -1,5 +1,3 @@
-from Safety import initializer
-
 
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
@@ -7,13 +5,13 @@ from Safety import initializer
 #
 # }
 class Safety:
-    def __init__(self,private_keys,public_keys,highest_vote_round,highest_qc_round,qc_round,validator_info=None):
+    def __init__(self, validator_info=None):
         self.validator_info=validator_info
-        self.private_keys = private_keys
-        self.public_keys = public_keys
-        self.highest_vote_round = highest_vote_round
-        self.highest_qc_round = highest_qc_round
-        self.qc_round = qc_round
+        self.private_keys = 'private_keys'
+        self.public_keys = 'public_keys'
+        self.highest_vote_round = 0
+        self.highest_qc_round = 0
+        self.qc_round = 0
 
 
     def increase_highest_vote_round(self,round):
