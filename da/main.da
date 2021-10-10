@@ -1,0 +1,25 @@
+import sys
+import time
+import random
+import validator as validator
+
+def main():
+
+    n_validators = 4
+    validator_ids = ['1', '2', '3', '4']
+    validators = list(new(validator.Validator, num= n_validators))
+
+
+    validator_descriptions = []
+    for i in range(0, len(validator_ids)):
+        id = validators[i]
+        validator_descriptions.append(id)
+
+
+    for i in range(0, len(validator_ids)):
+    #   output('TEST')
+       setup(validators[i], args=(i, validator_descriptions[i], n_validators))
+    #   output('TEST 1')
+
+    start(validators)
+

@@ -1,0 +1,25 @@
+import logging
+
+ID = 0
+PROCESS_ID = 1
+IP = 2
+
+
+class Validator(process):
+    def setup(idx, validator_desc, n_validators):
+        self._idx = idx
+        self._validator_desc = validator_desc
+        self._n_validators = n_validators
+
+    def run():
+
+        if self._idx == 1:
+            output('Sending Massage from 1')
+            send(('MESSAGE',), to=self._validator_desc[2])
+        await(False)
+
+    def receive(msg=('MESSAGE',)):
+        output("MESSAGE RECEIVED.")
+
+
+
