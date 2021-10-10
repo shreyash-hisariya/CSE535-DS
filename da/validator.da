@@ -67,17 +67,60 @@ class Validator(process):
         output("TIMEOUT_MESSAGE RECEIVED.")
 
     def process_vote_msg(M):
-        pass
+        # add code for decrypting votemsg info (check page no 10)
+        self.qc = self.block_tree.process_vote(M)
+        if self.qc is not None:
+            self.process_certificate_qc(initializer.qc)
+            self.process_new_round_event(None)
+
+
 
     def process_timeout_msg(M):
-        pass
+        #add code for decrypting timeout info (check page no 12)
+        self.process_certificate_qc(M.tmo_info.high_qc)
+        self.process_certificate_qc(M.high_commit_qc)
+        self.pacemaker.advance_round_tc(M.last_round_tc)
+        self.tc = self.pacemaker.process_remote_timeout(M)
+        if self.tc is not None:
+            self.pacemaker.advance_round_tc(self.tc) # need to verify
+            self.process_new_round_event(self.tc)
 
     def process_new_round_event(last_tc):
-        pass
+        if self.u == self.leader_election.get_leader(self.pacemaker.current_round):
+            print('this is current leader', initializer.u)
+            self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
+            # TO DO broadcast
+            p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc)
+            print('Broad cast proposal message', self.b.payload)
+            # for now calling the process_proposal_msg directly
+
+            #distAlgo
+            self.process_proposal_msg(p) # need to broadcast
+
+    def verify_signatures(block):
+        hash_of_current_block=hash(block.author,block.block_round,block.payload,block.qc.vote_info.id,block.qc.signatures)
+        if hash_of_current_block==block.block_id:
+            print("Valid Block signatures")
+            return True
+        print("InValid Block signatures")
+        return False
 
     def process_proposal_msg(P):
-        pass
+        self.verify_signatures(P.block) #need to verify
+        self.process_certificate_qc(P.block.qc)
+        self.process_certificate_qc(P.high_commit_qc)
+        self.pacemaker.advance_round_tc(P.last_round_tc)
+        self.round = self.pacemaker.current_round
+        self.leader = self.leader_election.get_leader(self.round) # need to verify
+        if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+            return
+        self.block_tree.execute_and_insert(P)
+        self.vote_msg = self.safety.make_vote(P.block, P.last_round_tc)
+        if self.vote_msg is not None:
+            #distAlgo: send vote msg to leader of the next round
+            pass
 
     def process_certificate_qc(qc):
-        pass
-
+        self.block_tree.process_qc(qc)
+        self.leader_election.update_leaders(qc)
+        self.pacemaker.advance_round_qc(qc.vote_info.round)
