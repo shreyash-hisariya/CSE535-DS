@@ -49,13 +49,18 @@ class Validator(process):
 
     def run():
 
-        if self._idx == 1:
-            output('Sending Massage from 1')
-            send(('PROPOSAL_MESSAGE', 'BOX BOX MAX'), to=self._validator_desc[2])
+        #if self._idx == 1:
+        #    output('Sending Message from 1')
+        #    send(('PROPOSAL_MESSAGE', 'BOX BOX MAX'), to=self._validator_desc[2])
         await(False)
 
     def receive(msg=('LOCAL_TIMEOUT',)):
         output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
+
+    def receive(msg=('CLIENT_REQUEST', request)):
+        client, cmd, cid = request
+        output("CLIENT_REQUEST RECEIVED - " + str(cid))
+        # process new round event
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
         output("PROPOSAL_MESSAGE RECEIVED - " + m)
@@ -74,7 +79,6 @@ class Validator(process):
             self.process_new_round_event(None)
 
 
-
     def process_timeout_msg(M):
         #add code for decrypting timeout info (check page no 12)
         self.process_certificate_qc(M.tmo_info.high_qc)
@@ -84,6 +88,7 @@ class Validator(process):
         if self.tc is not None:
             self.pacemaker.advance_round_tc(self.tc) # need to verify
             self.process_new_round_event(self.tc)
+
 
     def process_new_round_event(last_tc):
         if self.u == self.leader_election.get_leader(self.pacemaker.current_round):
@@ -97,6 +102,7 @@ class Validator(process):
             #distAlgo
             self.process_proposal_msg(p) # need to broadcast
 
+
     def verify_signatures(block):
         hash_of_current_block=hash(block.author,block.block_round,block.payload,block.qc.vote_info.id,block.qc.signatures)
         if hash_of_current_block==block.block_id:
@@ -104,6 +110,7 @@ class Validator(process):
             return True
         print("InValid Block signatures")
         return False
+
 
     def process_proposal_msg(P):
         self.verify_signatures(P.block) #need to verify
@@ -119,6 +126,7 @@ class Validator(process):
         if self.vote_msg is not None:
             #distAlgo: send vote msg to leader of the next round
             pass
+
 
     def process_certificate_qc(qc):
         self.block_tree.process_qc(qc)
