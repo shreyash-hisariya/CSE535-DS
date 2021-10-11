@@ -1,3 +1,5 @@
+from collections import defaultdict
+from collections import OrderedDict
 #Not needed here
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
@@ -7,12 +9,16 @@
 class Mempool:
     def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.transactions = set()  # this will be filled when a validator is initialized via runner
+        self.transactions = defaultdict() # this will be filled when a validator is initialized via runner
 
 
     def get_transactions(self,):
-        #initializer.transactions.add('Transaction 1')
-        return self.transactions
+        list_of_pending_transactions=[]
+        for k, v in self.transactions:
+            if v=="PENDING":
+                list_of_pending_transactions.append(k)
 
-    def add_transaction(self,M):
-        self.transactions.add(M)
+        return list_of_pending_transactions
+
+    def add_transaction(self,M,state):
+        self.transactions[M]=state

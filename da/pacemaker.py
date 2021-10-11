@@ -57,6 +57,7 @@ class Pacemaker:
         if tc is None or tc.round < self.current_round:
             return False
         self.last_round_tc= tc
+        ###Saurabh: tc.round + 1 or current_round+1
         self.start_timer(tc.round + 1)
         return True
 
@@ -65,6 +66,7 @@ class Pacemaker:
         if qc.vote_info.round < self.current_round:
             return False
 
+        # if a validator is lagging, then the following code advances it to the current round
         self.last_round_tc = None
         self.start_timer(qc.vote_info.round + 1)
         return True

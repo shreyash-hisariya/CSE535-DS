@@ -42,9 +42,11 @@ class Leader_election:
         current_round = self.validator_info["Pacemaker"].current_round
         if extended_round + 1 == qc_round and qc_round + 1 == current_round:
             self.reputation_leaders[current_round + 1] = self.elect_reputation_leader(qc)
-
+            ###Saurabh: self.reputation_leaders[current_round + 1] needs to be list or a single value
+            ###Saurabh: should we broadcast this to everyone so that there is a consensus for the next leader
 
     def get_leader(self,curr_round):
+        ###Saurabh: write algo for selection of self.reputation_leaders
         if curr_round in self.reputation_leaders:
             return self.reputation_leaders[curr_round]
 

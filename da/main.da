@@ -3,20 +3,59 @@ import time
 import random
 import validator as validator
 
+NOPS = 3
+def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
+operations = {i: operation(i) for i in range(NOPS)}
+
+class Client(process):
+    def setup(idx, validators, NOPS):
+        self.idx = idx
+        self.cid = 0           # command id
+        self.results = dict()  # map of command id to result of command
+        self.count = dict()    # map of command id to number of responses
+
+    def run():
+        for i in range(NOPS):
+            cmd = str(idx) + " - " + str(cid) + " - " + str(i)
+            send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
+            await(cid in results)
+            output('received result', cid, results[cid])
+            cid += 1
+        await(each(cid in range(NOPS), has= count[cid] == len(validators)))
+        output('terminating')
+        send(('done',), to=parent())
+
+    def receive(msg= ('response', cid, result)):
+        debug('### response', cid, result)
+        if cid not in results:
+            results[cid] = result
+        elif results[cid] != result:
+            error('different result', cid, result, 'than', results[cid])
+        count[cid] = 1 if cid not in count else count[cid] + 1
+
 def main():
 
     n_validators = 4
+    n_clients = 3
     validator_ids = ['1', '2', '3', '4']
+    client_ids = ['c1', 'c2', 'c3']
+
     validators = list(new(validator.Validator, num= n_validators))
+    clients = list(new(Client, num= n_clients))
 
-
-    validator_descriptions = []
+    validator_pids = []
     for i in range(0, len(validator_ids)):
         id = validators[i]
-        validator_descriptions.append(id)
+        validator_pids.append(id)
 
+    for i in range(n_validators):
+       setup(validators[i], args=(i, validator_pids, n_validators))
 
-    for i in range(0, len(validator_ids)):
-       setup(validators[i], args=(i, validator_descriptions, n_validators))
+    for i in range(n_clients):
+       setup(clients[i], args=(clients[i], validators, NOPS))
 
     start(validators)
+    start(clients)
+    await(each(c in clients, has=received(('done',), from_=c)))
+    output('All clients done.')
+#    send(('done',), to= (acceptors|replicas|leaders))

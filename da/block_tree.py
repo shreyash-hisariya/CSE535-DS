@@ -21,9 +21,9 @@ class Block_tree:
         return max(qc.vote_info.round, high_commit_qc.vote_info.round)
 
     def process_qc(self,qc):
-
         if qc is not None and qc.ledger_commit_info.commit_state_id is not None:
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
+            ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
             self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
         self.high_qc = self.getMaxRound(qc, self.high_qc)
