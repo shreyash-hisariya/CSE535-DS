@@ -1,4 +1,5 @@
-
+from collections import defaultdict
+from collections import OrderedDict
 #Not needed here
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
@@ -6,12 +7,12 @@
 # }
 
 class Ledger:
-    def __init__(self,pending_ledger_states,persistent_ledger_states,blockid_ledger_map,validator_info=None):
+    def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.pending_ledger_states = pending_ledger_states #defaultdict()
-        self.persistent_ledger_states = persistent_ledger_states #defaultdict()
+        self.pending_ledger_states = defaultdict()
+        self.persistent_ledger_states = defaultdict()
         # key is block_id and value is corresponding ledger_state_id.
-        self.blockid_ledger_map = blockid_ledger_map#orderedDict()
+        self.blockid_ledger_map = OrderedDict()
 
     def speculate(self,prev_block_id, block_id, txns):
         # hashing to create the ledger state id.

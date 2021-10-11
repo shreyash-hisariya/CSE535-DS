@@ -13,3 +13,6 @@ class Mempool:
     def get_transactions(self,):
         #initializer.transactions.add('Transaction 1')
         return self.transactions
+
+    def add_transaction(self,M):
+        self.transactions.add(M)

@@ -7,8 +7,7 @@ from safety import Safety
 from pacemaker import Pacemaker
 from mempool import Mempool
 from leader_election import Leader_election
-from collections import defaultdict
-from collections import OrderedDict
+
 
 ID = 0
 PROCESS_ID = 1
@@ -32,9 +31,9 @@ class Validator(process):
         main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,
         'b' : self.b}
 
-        self.ledger = Ledger(defaultdict(), defaultdict(), OrderedDict())
+        self.ledger = Ledger()
         validator_info = {'Main' : main_dict, 'Ledger' : self.ledger}
-        self.block_tree = Block_tree([], {}, None, None, validator_info)
+        self.block_tree = Block_tree(validator_info)
 
         self.safety = Safety(validator_info)
 
@@ -85,9 +84,11 @@ class Validator(process):
             self.pacemaker.advance_round_tc(self.tc) # need to verify
             self.process_new_round_event(self.tc)
 
-    def process_new_round_event(last_tc):
+    def process_new_round_event(last_tc,M):
         if self.u == self.leader_election.get_leader(self.pacemaker.current_round):
-            print('this is current leader', initializer.u)
+            #add to mempool
+            self.mempool.add_transaction(M)
+            print('this is current leader', self.u)
             self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
             # TO DO broadcast
             p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc)
