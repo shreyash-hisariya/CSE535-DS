@@ -10,20 +10,20 @@ from Models.qc import QC
 
 class Block_tree:
 
-    def __init__(self,pending_block_tree,pending_votes,high_qc,high_commit_qc,validator_info=None):
+    def __init__(self,validator_info=None):
         self.validator_info=validator_info
-        self.pending_block_tree = pending_block_tree # []  # may need to verify
-        self.pending_votes = pending_votes # {}  # dictionary where key is hash(v.ledger_commit_info) and value is set of signatures
-        self.high_qc = high_qc # None
-        self.high_commit_qc = high_commit_qc #None
+        self.pending_block_tree =  []  # may need to verify
+        self.pending_votes = {}  # dictionary where key is hash(v.ledger_commit_info) and value is set of signatures
+        self.high_qc = None
+        self.high_commit_qc = None
 
     def getMaxRound(self, qc, high_commit_qc):
         return max(qc.vote_info.round, high_commit_qc.vote_info.round)
 
     def process_qc(self,qc):
-
         if qc is not None and qc.ledger_commit_info.commit_state_id is not None:
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
+            ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
             self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
         self.high_qc = self.getMaxRound(qc, self.high_qc)
@@ -65,7 +65,7 @@ class Block_tree:
         curr_round = current_round
         payload = transactions
         qc = self.high_qc
-        hash_id = self.hash(author, curr_round, payload, qc.vote_info.id, qc.signatures)
+        hash_id = self.hash(author, curr_round, payload, qc.vote_info.id, qc.signatures) #Crypto
         block = Block(author, curr_round, payload, qc, hash_id)
         return block
 

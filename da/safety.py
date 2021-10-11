@@ -46,6 +46,7 @@ class Safety:
         self.qc_round = b.qc.vote_info.round
         if valid_signatures(b, last_tc) and self.safe_to_vote(b.round, self.qc_round, last_tc):
             self.update_highest_qc_round(self.qc_round)
+            ###Saurabh: Why next line?
             self.increase_highest_vote_round(b.round)
             vote_info = VoteInfo(b.id, b.round, b.qc.vote_info.id, self.qc_round, Ledger.pending_state(b.id))
 
