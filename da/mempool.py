@@ -14,8 +14,8 @@ class Mempool:
 
     def get_transactions(self,):
         list_of_pending_transactions=[]
-        for k, v in self.transactions:
-            if v=="PENDING":
+        for k, v in self.transactions.items():
+            if v == "PENDING":
                 list_of_pending_transactions.append(k)
 
         return list_of_pending_transactions

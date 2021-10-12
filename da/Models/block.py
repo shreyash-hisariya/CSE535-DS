@@ -3,10 +3,10 @@ class Block:
         # Author of the block
         self.author = author
         # Round in which block is generated
-        self.block_round = block_round
+        self.round = block_round
         # Payload of transactions to be committed
         self.payload = payload
         # Quorum certificate of the parent block
         self.qc = quorum_cert
         # Digest of author, block_round, payload, quorum_cert.vote_info.id, quorum_cert.signatures
-        self.block_id = block_id
+        self.id = block_id

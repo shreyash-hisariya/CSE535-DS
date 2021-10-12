@@ -21,6 +21,7 @@ class Pacemaker:
     def start_timer(self,new_round):
         self.stop_timer(self.current_round)
         self.current_round = new_round
+        print("next round",self.current_round)
         #distAlgo: start timer for this current_round for duration=get_round_timer(initializer.current_round)
 
     def save_consensus_state(self):
@@ -28,10 +29,10 @@ class Pacemaker:
         pass
 
     def local_timeout_round(self):
-        self.save_consensus_state() #need to clarify
+        #self.save_consensus_state() #As per professor
         timeout_info = self.validator_info["Safety"].make_timeout(self.current_round, self.validator_info["BlockTree"].high_qc, self.last_round_tc)
-
         # to do broadCast Timeout_Message()
+
 
     # To Do timeout
     def process_remote_timeout(self,tmo):
@@ -63,11 +64,15 @@ class Pacemaker:
 
 
     def advance_round_qc(self,qc):
-        if qc.vote_info.round < self.current_round:
+
+        if qc is None or qc.vote_info.round < self.current_round:
+            #print("In advance_round_qc: return")
             return False
 
         # if a validator is lagging, then the following code advances it to the current round
         self.last_round_tc = None
+
+        ### thinking: increase the pacemaker round and broadcast
         self.start_timer(qc.vote_info.round + 1)
         return True
 
