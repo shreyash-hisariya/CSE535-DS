@@ -18,27 +18,59 @@ class Block_tree:
         self.high_commit_qc = None
 
     def getMaxRound(self, qc, high_commit_qc):
-        return max(qc.vote_info.round, high_commit_qc.vote_info.round)
+
+        if qc is None and high_commit_qc is None:
+            return None
+        elif qc is None:
+            return high_commit_qc
+        elif high_commit_qc is None:
+            return qc
+        else:
+            return qc if (qc.vote_info.round> high_commit_qc.vote_info.round) else high_commit_qc
 
     def process_qc(self,qc):
-        if qc is not None and qc.ledger_commit_info.commit_state_id is not None:
+
+        if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
+            ###shreyas: need to revisit
+            #print("ab to aa gya",qc.vote_info.parent_id)
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
             self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
+
+
         self.high_qc = self.getMaxRound(qc, self.high_qc)
+        #print("return ing self.high_qc",self.high_qc)
+
+
 
     def execute_and_insert(self,b):
-        self.validator_info["Ledger"].speculate(b.qc.block_id, b.id, b.payload)
-        self.pending_block_tree.add(b)
+
+        if b.qc is None:
+            self.validator_info["Ledger"].speculate(-1, b.id, b.payload)
+        else:
+            self.validator_info["Ledger"].speculate(b.qc.block_id, b.id, b.payload)
+
+        self.pending_block_tree.append(b)
+        #print("self.pending_block_tree[0]",self.pending_block_tree[0].payload)
 
     def process_vote(self,v):
         self.process_qc(v.high_commit_qc)
-        vote_idx = hash(v.ledger_commit_info)
-        self.pending_votes[vote_idx]=self.pending_votes[vote_idx].add(v.signature)
-        if len(self.pending_votes[vote_idx]) == (2*f)+1:
+        #vote_idx = hash(v.ledger_commit_info)
+        vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
+        # print("$$$$$$$$$$$$$$$$$$$",v.ledger_commit_info.commit_state_id)
+        #print("vote_idx",vote_idx)
+        #print("v.signature",v.signature)
+        if vote_idx in self.pending_votes:
+            self.pending_votes[vote_idx].append(v.signature)
+        else:
+            self.pending_votes[vote_idx] = [v.signature]
+        #print("no of votes", len(self.pending_votes[vote_idx]))
+        if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
             signatures_list=list(self.pending_votes[vote_idx])
-            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,v.sender, v.signature)
+            #print("signatures_list: ",len(signatures_list))
+            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,v.sender,str(self.validator_info["Main"]["u"] )) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
+            #print("new_qc",new_qc)
             return new_qc
         return None
 
@@ -61,20 +93,34 @@ class Block_tree:
 
 
     def generate_block(self,transactions, current_round):
+
         author = self.validator_info["Main"]["u"]
         curr_round = current_round
+
         payload = transactions
         qc = self.high_qc
-        hash_id = self.hash(author, curr_round, payload, qc.vote_info.id, qc.signatures) #Crypto
+
+        if qc is not None:
+            vote_info_id=qc.vote_info.id
+            qc_signatures=qc.signatures
+        else:
+            vote_info_id = -1
+            qc_signatures = []
+
+        hash_id = self.hash(author, curr_round, payload, vote_info_id, qc_signatures) #Crypto
         block = Block(author, curr_round, payload, qc, hash_id)
+
         return block
 
 
-    def hash(self,a, b, c, d, e):
+    def hash(self,a="", b="", c="", d="", e=""):
         return str(a) + str(e) + str(b) + str(c) + str(d)
 
 
     def prune(self,parent_block_id):
+        if parent_block_id  not in self.validator_info["Ledger"].blockid_ledger_map:
+            #print("Pruneeee skipped")
+            return
         parent_ledger_state_id = self.validator_info["Ledger"].blockid_ledger_map[parent_block_id]
         list_of_ledger_ids=[]
         for key,val in enumerate(self.validator_info["Ledger"].blockid_ledger_map):

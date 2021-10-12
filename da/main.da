@@ -2,7 +2,7 @@ import sys
 import time
 import random
 import validator as validator
-
+from collections import OrderedDict
 NOPS = 3
 def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
@@ -36,20 +36,20 @@ class Client(process):
 def main():
 
     n_validators = 4
-    n_clients = 3
-    validator_ids = ['1', '2', '3', '4']
-    client_ids = ['c1', 'c2', 'c3']
+    n_clients = 1
+    validator_ids = ['v1', 'v2', 'v3', 'v4']
+    client_ids = ['c1']
 
     validators = list(new(validator.Validator, num= n_validators))
     clients = list(new(Client, num= n_clients))
 
-    validator_pids = []
+    validator_dict = OrderedDict()
     for i in range(0, len(validator_ids)):
         id = validators[i]
-        validator_pids.append(id)
+        validator_dict[validator_ids[i]]=id
 
     for i in range(n_validators):
-       setup(validators[i], args=(i, validator_pids, n_validators))
+       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators))
 
     for i in range(n_clients):
        setup(clients[i], args=(clients[i], validators, NOPS))
