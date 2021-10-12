@@ -21,4 +21,6 @@ class Mempool:
         return list_of_pending_transactions
 
     def add_transaction(self,M,state):
+        if M is None:
+            return
         self.transactions[M]=state

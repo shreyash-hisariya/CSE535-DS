@@ -67,11 +67,10 @@ class Validator(process):
     def receive(msg=('PROPOSAL_MESSAGE', m)):
 
         client, proposal_msg = m
-        output("PROPOSAL_MESSAGE RECEIVED - " + str(client))
+        output("PROPOSAL_MESSAGE RECEIVED - " + str(proposal_msg))
 
-        #if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
+        # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
-
         self.process_proposal_msg(client, proposal_msg)
 
     def receive(msg=('VOTE_MESSAGE',m)):
@@ -89,7 +88,7 @@ class Validator(process):
         ###Saurabh : Should we not broadcast qc so that everyone updates the qc
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
-            #self.process_new_round_event(None) #verify the arguments
+            self.process_new_round_event(None, None, None) #verify the arguments
 
 
     def process_timeout_msg(M):
@@ -106,20 +105,24 @@ class Validator(process):
     def process_new_round_event(last_tc,client,M):  #Function def changed to include client
 
 
-        if self.u == self.leader_election.get_leader(self.pacemaker.current_round):
+        if M is None or self.u == self.leader_election.get_leader(self.pacemaker.current_round):
             #add to mempool
             self.mempool.add_transaction(M,"PENDING")
-            #print('this is current leader', self.u)
-            #print("len",len(self.mempool.get_transactions()))
             self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
             # TO DO broadcast
-            p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc,self.u)
-            #print('Broad cast proposal message', self.b.payload)
 
-            send(('PROPOSAL_MESSAGE', (client, p)), to=list(self._validator_dict.values()))
+            p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc, self.u)
 
-            # for now calling the process_proposal_msg directly
-            #self.process_proposal_msg(p) # need to broadcast
+            if M is None:
+                print('HELLO HELLO ######################')
+                print('EMPTY ROUND - ', self.pacemaker.current_round)
+                sender_list=[]
+                for k,v in self._validator_dict.items():
+                    if k != self.u:
+                        sender_list.append(v)
+                send(('PROPOSAL_MESSAGE', (client, p)), to=sender_list)
+            else:
+                send(('PROPOSAL_MESSAGE', (client, p)), to=list(self._validator_dict.values()))
 
 
     def verify_signatures(block):
@@ -143,9 +146,12 @@ class Validator(process):
         self.round = self.pacemaker.current_round
         #print("ID",self.u,"current Round:",self.round )
         self.leader = self.leader_election.get_leader(self.round) # need to verify
-        #print("ID",self.u,"leader:",self.leader)
 
+        if client is None:
+            print('IN EMPTY PROPOSAL MESSAGE', self.block_tree.high_qc.author, self.round, P.sender, self.leader, P.block.author)
+            return
         if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+            print('RETURN RETURN RETURN RETURN RETURN')
             return
         self.block_tree.execute_and_insert(P.block)
         self.vote_msg = self.safety.make_vote(P.block, P.last_round_tc)
