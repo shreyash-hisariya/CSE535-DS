@@ -21,7 +21,6 @@ class Pacemaker:
     def start_timer(self,new_round):
         self.stop_timer(self.current_round)
         self.current_round = new_round
-        print("next round",self.current_round)
         #distAlgo: start timer for this current_round for duration=get_round_timer(initializer.current_round)
 
     def save_consensus_state(self):

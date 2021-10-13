@@ -32,56 +32,41 @@ class Block_tree:
 
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
             ###shreyas: need to revisit
-            #print("ab to aa gya",qc.vote_info.parent_id)
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
+
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
             self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
 
 
         self.high_qc = self.getMaxRound(qc, self.high_qc)
-        #print("return ing self.high_qc",self.high_qc)
+
 
 
 
     def execute_and_insert(self,b):
 
+        if b.author == "v3":
+            print("BOX BOX BOX")
         if b.qc is None:
             self.validator_info["Ledger"].speculate(-1, b.id, b.payload)
         else:
-            self.validator_info["Ledger"].speculate(b.qc.block_id, b.id, b.payload)
+            self.validator_info["Ledger"].speculate(b.qc.vote_info.id, b.id, b.payload)
 
         self.pending_block_tree.append(b)
-        #print("self.pending_block_tree[0]",self.pending_block_tree[0].payload)
 
     def process_vote(self,v):
         self.process_qc(v.high_commit_qc)
-        #vote_idx = hash(v.ledger_commit_info)
         vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
-        # print("$$$$$$$$$$$$$$$$$$$",v.ledger_commit_info.commit_state_id)
-        #print("vote_idx",vote_idx)
-        #print("v.signature",v.signature)
         if vote_idx in self.pending_votes:
             self.pending_votes[vote_idx].append(v.signature)
         else:
             self.pending_votes[vote_idx] = [v.signature]
-        #print("no of votes", len(self.pending_votes[vote_idx]))
         if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
             signatures_list=list(self.pending_votes[vote_idx])
-            #print("signatures_list: ",len(signatures_list))
-            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,v.sender,str(self.validator_info["Main"]["u"] )) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
-            #print("new_qc",new_qc)
+            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
             return new_qc
         return None
-
-    # def process_vote(v):
-    #     process_qc(v.high_commit_qc)
-    #     vote_idx = hash(v.ledger_commit_info)
-    #     vote_count = get_vote_count(v, vote_idx)
-    #     if vote_count == 4:
-    #         new_qc = QC(v.vote_info, v.state_id, initializer.pending_votes)
-    #         return new_qc
-
 
     '''
     - What will be the initial value for qc and high_qc(vote_info, etc)
@@ -119,11 +104,11 @@ class Block_tree:
 
     def prune(self,parent_block_id):
         if parent_block_id  not in self.validator_info["Ledger"].blockid_ledger_map:
-            #print("Pruneeee skipped")
             return
         parent_ledger_state_id = self.validator_info["Ledger"].blockid_ledger_map[parent_block_id]
+
         list_of_ledger_ids=[]
-        for key,val in enumerate(self.validator_info["Ledger"].blockid_ledger_map):
+        for key,val in self.validator_info["Ledger"].blockid_ledger_map.items():
             if val == parent_ledger_state_id:
                 break
             list_of_ledger_ids.append(val)
@@ -131,7 +116,3 @@ class Block_tree:
         # list_of_ledger_ids=[val for key,val in enumerate(Ledger.id_map) ]
         for ledger_id in list_of_ledger_ids:
             del self.validator_info["Ledger"].pending_ledger_states[ledger_id]
-
-    #
-    # def get_vote_count(v, vote_idx):
-    #     pass

@@ -36,15 +36,14 @@ class Leader_election:
         return active_validators[0]
 
     def update_leaders(self, qc):
-        print("~~~~~~~~~~~~~~~~~~~~")
         if qc is None:
             # print("return from update_leaders as qc is None")
             return
         extended_round = qc.vote_info.parent_round
         qc_round = qc.vote_info.round
         current_round = self.validator_info["Pacemaker"].current_round
-        print("????????? Check: ", extended_round, " ", qc_round, " ", current_round)
-
+        if extended_round == -1:
+            return
         # shreyas: every replica should be in some consesus
 
         if extended_round + 1 == qc_round and qc_round + 1 == current_round:
