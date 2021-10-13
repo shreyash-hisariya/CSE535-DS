@@ -36,18 +36,18 @@ class Block_tree:
 
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
-            self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
+
+            #self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
 
 
-        self.high_qc = self.getMaxRound(qc, self.high_qc)
+        #self.high_qc = self.getMaxRound(qc, self.high_qc)
 
 
 
 
     def execute_and_insert(self,b):
 
-        if b.author == "v3":
-            print("BOX BOX BOX")
+
         if b.qc is None:
             self.validator_info["Ledger"].speculate(-1, b.id, b.payload)
         else:
@@ -65,6 +65,9 @@ class Block_tree:
         if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
             signatures_list=list(self.pending_votes[vote_idx])
             new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
+            if self.high_qc is not None:
+                self.high_commit_qc=self.high_qc
+            self.high_qc=new_qc
             return new_qc
         return None
 

@@ -68,6 +68,7 @@ class Validator(process):
     def receive(msg=('PROPOSAL_MESSAGE', m)):
 
         client, proposal_msg = m
+
         output("FROM - ",proposal_msg.sender, " SELF ", self.u)
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
@@ -89,7 +90,7 @@ class Validator(process):
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
             self.process_new_round_event(None, None, None) #verify the arguments
-
+        #print("DONE Process Vote",validator_id," SELF ",self.u)
 
     def process_timeout_msg(M):
         #add code for decrypting timeout info (check page no 12)
@@ -130,8 +131,9 @@ class Validator(process):
 
 
     def process_proposal_msg(client, P): #Function def changed to include client
+
         #self.verify_signatures(P.block) #need to verify
-        if P.block.author == "v3":
+        if P.block.author == "v3" and P.high_commit_qc is not None:
             output('YAHA YAHA SUCCESS', P.high_commit_qc.vote_info.round)
         self.process_certificate_qc(P.block.qc)
         self.process_certificate_qc(P.high_commit_qc)
@@ -143,6 +145,8 @@ class Validator(process):
 
         self.leader = self.leader_election.get_leader(self.round) # need to verify
         if client is None:
+            #print("RETURNRETURNRETURNRETURNRETURN ",self.u)
+            print(self.u, " Final Ledger Info",self.ledger.persistent_ledger_states)
             return
         if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
             return
@@ -157,10 +161,8 @@ class Validator(process):
 
 
     def process_certificate_qc(qc):
-
         self.block_tree.process_qc(qc)     #do we need to broadcast the updated qc
         self.leader_election.update_leaders(qc) #do we need to broadcast the updated leader
         if qc is not None:
             self.pacemaker.advance_round_qc(qc)#need to verify
-            if qc is not None and qc.author == "v3":
-                output('AUTHOR AUTHOR')
+
