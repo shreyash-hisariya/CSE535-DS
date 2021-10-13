@@ -3,7 +3,7 @@ import time
 import random
 import validator as validator
 from collections import OrderedDict
-NOPS = 2
+NOPS = 1
 def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
 
@@ -20,9 +20,7 @@ class Client(process):
             send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
             #await(cid in results)
             #output('received result', cid, results[cid])
-            output('NOW SLEEPING')
             time.sleep(2.5)
-            output('WAKING UP')
             cid += 1
         #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
         #output('terminating')

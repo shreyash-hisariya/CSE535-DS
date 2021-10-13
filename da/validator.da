@@ -1,5 +1,8 @@
 # validator
 
+import sys
+import time
+import da
 import logging
 from block_tree import Block_tree
 from ledger import Ledger
@@ -37,7 +40,6 @@ class Validator(process):
         validator_info['BlockTree'] = self.block_tree
         self.safety = Safety(validator_info)
 
-
         validator_info['Safety'] = self.safety
         self.pacemaker = Pacemaker(validator_info)
 
@@ -48,7 +50,16 @@ class Validator(process):
         self.leader_election = Leader_election(validator_info)
 
     def run():
-        await(False)
+        run_done = False
+        while not run_done:
+            round_done = False
+            timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
+            if await(round_done):
+                pass
+            elif timeout(timer_duration) :
+                self.pacemaker.local_timeout_round()
+
+     #   await(False)
 
     def receive(msg=('LOCAL_TIMEOUT',)):
         output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
@@ -63,7 +74,10 @@ class Validator(process):
     def receive(msg=('PROPOSAL_MESSAGE', m)):
 
         client, proposal_msg = m
-        output("SELF ", self.u, " PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
+        output("SELF ", self.u, "PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
+        if self.u == 'v4':
+            output("TIMING OUT V4 ")
+            time.sleep(3)
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
         self.process_proposal_msg(client, proposal_msg)

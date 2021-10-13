@@ -16,7 +16,7 @@ class Pacemaker:
 
     def get_round_timer(self,r):
         #distAlgo: set timer for a round expiry
-        pass
+        return 2
 
     def start_timer(self,new_round):
         self.stop_timer(self.current_round)
@@ -29,7 +29,8 @@ class Pacemaker:
 
     def local_timeout_round(self):
         #self.save_consensus_state() #As per professor
-        timeout_info = self.validator_info["Safety"].make_timeout(self.current_round, self.validator_info["BlockTree"].high_qc, self.last_round_tc)
+        print("IN LOCAL TIMEOUT ROUND. IN LOCAL TIMEOUT ROUND")
+        #timeout_info = self.validator_info["Safety"].make_timeout(self.current_round, self.validator_info["BlockTree"].high_qc, self.last_round_tc)
         # to do broadCast Timeout_Message()
 
 
