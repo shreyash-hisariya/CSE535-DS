@@ -48,14 +48,10 @@ class Validator(process):
         self.leader_election = Leader_election(validator_info)
 
     def run():
-
-        #if self._idx == 1:
-        #    output('Sending Message from 1')
-        #    send(('PROPOSAL_MESSAGE', 'BOX BOX MAX'), to=self._validator_desc[2])
         await(False)
 
     def receive(msg=('LOCAL_TIMEOUT',)):
-        #output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
+        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
         pass
 
     def receive(msg=('CLIENT_REQUEST', request)):
@@ -63,16 +59,15 @@ class Validator(process):
         #output("CLIENT_REQUEST RECEIVED - " + str(client) + str(cid))
 
         self.process_new_round_event(None,client,cmd)
-        # process new round event
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
 
         client, proposal_msg = m
-        output("FROM - ",proposal_msg.sender, " SELF ", self.u)
+        output("SELF ", self.u, " PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
         self.process_proposal_msg(client, proposal_msg)
-        output("SELF ", self.u, " PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
+
 
     def receive(msg=('VOTE_MESSAGE',m)):
         validator_id, vote_msg = m
@@ -131,8 +126,6 @@ class Validator(process):
 
     def process_proposal_msg(client, P): #Function def changed to include client
         #self.verify_signatures(P.block) #need to verify
-        if P.block.author == "v3":
-            output('YAHA YAHA SUCCESS', P.high_commit_qc.vote_info.round)
         self.process_certificate_qc(P.block.qc)
         self.process_certificate_qc(P.high_commit_qc)
 
@@ -142,7 +135,8 @@ class Validator(process):
         self.round = self.pacemaker.current_round
 
         self.leader = self.leader_election.get_leader(self.round) # need to verify
-        if client is None:
+        if P.block.payload is None:
+            output('SELF ', self.u, ' FINAL LEDGER STATE ', self.ledger.persistent_ledger_states)
             return
         if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
             return
@@ -152,7 +146,6 @@ class Validator(process):
 
         if self.vote_msg is not None:
             #distAlgo: send vote msg to leader of the next round
-            output(self.leader," check leader",self.leader_election.get_leader(self.round+1))
             send(('VOTE_MESSAGE', (self.u, self.vote_msg)), to=self._validator_dict[self.leader_election.get_leader(self.round+1)]) # need to verify
 
 
@@ -162,5 +155,3 @@ class Validator(process):
         self.leader_election.update_leaders(qc) #do we need to broadcast the updated leader
         if qc is not None:
             self.pacemaker.advance_round_qc(qc)#need to verify
-            if qc is not None and qc.author == "v3":
-                output('AUTHOR AUTHOR')

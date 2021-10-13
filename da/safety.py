@@ -80,17 +80,14 @@ class Safety:
                                      self.validator_info["Ledger"].pending_state(b.id))
                 hash_vote_info = self.hash_func(b.id, b.round, b.qc.vote_info.id, self.qc_round,
                                                 self.validator_info["Ledger"].pending_state(b.id))
-            # print("HELLO HELLO", vote_info.round)
-            # TO DO hashing part.
 
-            # print("CHECKKKKKKKKK",self.validator_info["Main"]["u"], " hash(vote_info):",hash_vote_info)
+            # TO DO hashing part.
             if b.qc is not None:  # need to verify this
                 ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, b.qc),
                                                       hash_vote_info)  # need to verify for -1
             else:
                 ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, None), hash_vote_info)
 
-            # print("ledger_commit_info",ledger_commit_info.commit_state_id)
             signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
