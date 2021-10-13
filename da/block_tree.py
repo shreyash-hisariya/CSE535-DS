@@ -36,7 +36,9 @@ class Block_tree:
 
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
+
             #self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
+
 
         #self.high_qc = self.getMaxRound(qc, self.high_qc)
 

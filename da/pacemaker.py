@@ -12,7 +12,7 @@ class Pacemaker:
         self.current_round = 0
         self.last_round_tc = None
         self.pending_timeouts = {}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
-
+        self.pending_timeouts_senders = {} #extra dictionary of set (key:round,value:set of tmo_info.senders  getting timed_out) : may have to verify
 
     def get_round_timer(self,r):
         #distAlgo: set timer for a round expiry
@@ -31,6 +31,9 @@ class Pacemaker:
         #self.save_consensus_state() #As per professor
         timeout_info = self.validator_info["Safety"].make_timeout(self.current_round, self.validator_info["BlockTree"].high_qc, self.last_round_tc)
         # to do broadCast Timeout_Message()
+        timeout_message=TimeoutMsg(timeout_info, self.last_round_tc, self.validator_info["BlockTree"].high_commit_qc)
+        return timeout_message
+
 
 
     # To Do timeout
@@ -39,15 +42,25 @@ class Pacemaker:
         if tmo_info.round < self.current_round:
             return None
 
-        if tmp_info.sender not in pending_timeouts[tmo_info.round]:
-            pending_timeouts[tmo_info.round].add(tmo_info)
+        # if tmp_info.sender not in pending_timeouts[tmo_info.round]:
+        #     pending_timeouts[tmo_info.round].add(tmo_info)
 
-        if len(pending_timeouts[tmo_info.round])==f+1:
+        if tmo_info.round in self.pending_timeouts_senders:
+
+            if tmo_info.sender not in self.pending_timeouts_senders[tmo_info.round]:
+                self.pending_timeouts[tmo_info.round].add(tmo_info)
+                self.pending_timeouts_senders[tmo_info.round].add(tmo_info.sender)
+        else:
+            self.pending_timeouts[tmo_info.round] = {tmo_info}
+            self.pending_timeouts_senders[tmo_info.round] = {tmo_info.sender}
+
+        if len(self.pending_timeouts_senders[tmo_info.round])==f+1:
             self.stop_timer(self.current_round)
             self.local_timeout_round()
-        if len(pending_timeouts[tmo_info.round])==(2*f)+1:
-            high_qc_rounds_vector=[tmo_info.high_qc.vote_info.round for tmo_info in pending_timeouts[tmo_info.round]]
-            signature_list=[tmo_info.signature for tmo_info in pending_timeouts[tmo_info.round]]
+
+        if len(self.pending_timeouts_senders[tmo_info.round])==(2*f)+1:
+            high_qc_rounds_vector=[tmo_info.high_qc.vote_info.round for tmo_info in self.pending_timeouts[tmo_info.round]]
+            signature_list=[tmo_info.signature for tmo_info in self.pending_timeouts[tmo_info.round]]
             return TimeoutCertificate(tmo_info.round,high_qc_rounds_vector,signature_list)
 
         return None

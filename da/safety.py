@@ -88,6 +88,7 @@ class Safety:
             else:
                 ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, None), hash_vote_info)
 
+
             signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
