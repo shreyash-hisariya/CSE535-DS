@@ -123,18 +123,20 @@ class Validator(process):
         self.process_certificate_qc(M.high_commit_qc)
         self.pacemaker.advance_round_tc(M.last_round_tc)
         self.tc = self.pacemaker.process_remote_timeout(M)
-        print(self.u, " TC MIL GYA bhai log")
 
         if self.tc is not None:
+            print(self.u, " TC MIL GYA bhai log")
             self.pacemaker.advance_round_tc(self.tc) # need to verify
-            self.process_new_round_event(self.tc,None,None)
+            #self.process_new_round_event(self.tc,None,None)
 
     # v3 ne bheja none none for qc of qc
     def process_new_round_event(last_tc,client,M):  #Function def changed to include client
         if M is None or self.u == self.leader_election.get_leader(self.pacemaker.current_round):
             #add to mempool
+            print("ohooooooooooo")
             self.mempool.add_transaction(M,"PENDING")
             self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
+            print(self.b.payload)
             # TO DO broadcast
             p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc, self.u)
             if M is None:
