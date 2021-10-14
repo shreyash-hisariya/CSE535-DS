@@ -199,6 +199,7 @@ class Validator(process):
         if client is None or P.block.payload is None:
 
             output('SELF ', self.u, ' FINAL LEDGER STATE ', self.ledger.persistent_ledger_states)
+            #send result to client
 #            print("P.block.qc",P.block.qc)
             print("RETURN FROM EMPTY",self.u," round: ",self.pacemaker.current_round,"high_qc:",self.block_tree.high_qc.author)
 

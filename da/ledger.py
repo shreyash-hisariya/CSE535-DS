@@ -48,9 +48,8 @@ class Ledger:
 
     def writeToFile(self,key,value):
 
-
         f = open(self.persistent_ledger_file, "a")
-        msg="New Commit: "+self.validator_info["Main"]["u"]+" ledger_state_id: " +key+" block_id: "+str(value[0])+" Transaction: "+str(value[1])
+        msg="\nNew Commit: "+self.validator_info["Main"]["u"]+" ledger_state_id: " +key+" block_id: "+str(value[0])+" Transaction: "+str(value[1])
         f.write(msg)
         f.close()
 
