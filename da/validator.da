@@ -1,5 +1,6 @@
 # validator
-
+from collections import defaultdict
+from collections import OrderedDict
 import sys
 import time
 import da
@@ -32,9 +33,13 @@ class Validator(process):
 
         main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,
         'b' : self.b}
+        validator_info={}
+        validator_info['Main'] = main_dict
+        file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
+        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,validator_info)
+        print("LEDGER FILE NAME",str(self.u)+str("persistent_ledger_file.txt"))
 
-        self.ledger = Ledger()
-        validator_info = {'Main' : main_dict, 'Ledger' : self.ledger}
+        validator_info['Ledger'] = self.ledger
         self.block_tree = Block_tree([],{},None,None,validator_info)
 
         validator_info['BlockTree'] = self.block_tree
