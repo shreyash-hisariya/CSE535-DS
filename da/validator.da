@@ -11,6 +11,7 @@ from pacemaker import Pacemaker
 from mempool import Mempool
 from leader_election import Leader_election
 from Models.proposal_message import ProposalMessage
+
 ID = 0
 PROCESS_ID = 1
 IP = 2
@@ -51,7 +52,7 @@ class Validator(process):
 
     def run():
 
-        if self.u=="v4":
+        if self.u=="v4" or self.u == 'v3'  or self.u == 'v2':
             while not self.run_done:
                 round_done = False
                 timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
@@ -82,14 +83,14 @@ class Validator(process):
 
         client, proposal_msg = m
         output("SELF ", self.u, "PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
-        if self.u == 'v4':
+        if self.u == 'v4' or self.u == 'v3' or  self.u == 'v2' :
             output("TIMING OUT V4 ")
             time.sleep(3)
             print("********* sleep ke niche")
 
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
-        if self.u == 'v4':
+        if self.u == 'v4'  or self.u == 'v3' or  self.u == 'v2':
             return
             print('HADKHSASKFHASKFHAKSFHAKSDHASKHKASFHKSA')
         self.process_proposal_msg(client, proposal_msg)
@@ -104,7 +105,8 @@ class Validator(process):
 
         validator_id, timeout_msg = m
         output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info.sender, " --- ", timeout_msg.tmo_info.block_round)
-        #self.process_timeout_msg(timeout_msg)
+        if self.u=="v1":
+            self.process_timeout_msg(timeout_msg)
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
         # add code for decrypting votemsg info (check page no 10)
@@ -121,9 +123,11 @@ class Validator(process):
         self.process_certificate_qc(M.high_commit_qc)
         self.pacemaker.advance_round_tc(M.last_round_tc)
         self.tc = self.pacemaker.process_remote_timeout(M)
+        print(self.u, " TC MIL GYA bhai log")
+
         if self.tc is not None:
             self.pacemaker.advance_round_tc(self.tc) # need to verify
-            self.process_new_round_event(self.tc)
+            self.process_new_round_event(self.tc,None,None)
 
     # v3 ne bheja none none for qc of qc
     def process_new_round_event(last_tc,client,M):  #Function def changed to include client

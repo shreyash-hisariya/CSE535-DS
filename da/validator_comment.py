@@ -103,6 +103,9 @@ class Validator(process):
         self.process_certificate_qc(M.high_commit_qc)
         self.pacemaker.advance_round_tc(M.last_round_tc)
         self.tc = self.pacemaker.process_remote_timeout(M)
+        print("1111TC  MIL GYA")
+        if self.tc is not None:
+            print("2222TC  MIL GYA")
         if self.tc is not None:
             self.pacemaker.advance_round_tc(self.tc)  # need to verify
             self.process_new_round_event(self.tc)

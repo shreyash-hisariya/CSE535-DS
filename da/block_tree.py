@@ -62,7 +62,7 @@ class Block_tree:
         if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
             signatures_list=list(self.pending_votes[vote_idx])
             new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
-
+            print("QC ban gya",self.validator_info["Main"]["u"])
             if self.high_qc is not None:
                 self.high_commit_qc=self.high_qc
             self.high_qc=new_qc
