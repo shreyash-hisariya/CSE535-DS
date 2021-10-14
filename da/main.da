@@ -3,7 +3,7 @@ import time
 import random
 import validator as validator
 from collections import OrderedDict
-NOPS = 1
+NOPS = 3
 def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
 

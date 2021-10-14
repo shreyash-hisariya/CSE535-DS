@@ -10,23 +10,29 @@ from Models.qc import QC
 
 class Block_tree:
 
-    def __init__(self,validator_info=None):
+    def __init__(self,pending_block_tree,pending_votes,high_qc,high_commit_qc,validator_info=None):
         self.validator_info=validator_info
-        self.pending_block_tree =  []  # may need to verify
-        self.pending_votes = {}  # dictionary where key is hash(v.ledger_commit_info) and value is set of signatures
-        self.high_qc = None
-        self.high_commit_qc = None
+        self.pending_block_tree =pending_block_tree#  []  # may need to verify
+        self.pending_votes = pending_votes#{}  # dictionary where key is hash(v.ledger_commit_info) and value is set of signatures
+        self.high_qc = high_qc#None
+        self.high_commit_qc = high_commit_qc#None
 
-    def getMaxRound(self, qc, high_commit_qc):
+    def getMaxRound(self, qc, high_commit_qc,update_high_commit_qc):
 
-        if qc is None and high_commit_qc is None:
-            return None
-        elif qc is None:
-            return high_commit_qc
-        elif high_commit_qc is None:
-            return qc
-        else:
-            return qc if (qc.vote_info.round> high_commit_qc.vote_info.round) else high_commit_qc
+        if qc is not None:
+            if self.high_qc is not None and update_high_commit_qc==True:
+                self.high_commit_qc = self.high_qc
+            elif update_high_commit_qc==False:
+                self.high_qc = qc
+
+        # if qc is None and high_commit_qc is None:
+        #     return None
+        # elif qc is None:
+        #     return high_commit_qc
+        # elif high_commit_qc is None:
+        #     return qc
+        # else:
+        #     return qc if (qc.vote_info.round> high_commit_qc.vote_info.round) else high_commit_qc
 
     def process_qc(self,qc):
 
@@ -37,10 +43,15 @@ class Block_tree:
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
 
-            #self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
+            # self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
+            self.getMaxRound(qc, self.high_commit_qc,True)
 
 
         #self.high_qc = self.getMaxRound(qc, self.high_qc)
+        self.getMaxRound(qc, self.high_qc,False)
+        # qc leader to update kar le rha par baakiyo ko dikkat ho rhi
+
+
 
 
     def execute_and_insert(self,b):
@@ -53,20 +64,27 @@ class Block_tree:
         self.pending_block_tree.append(b)
 
     def process_vote(self,v):
+
         self.process_qc(v.high_commit_qc)
+        if v.high_commit_qc is not None:
+            print("v.high_commit_qc.vote_info.round",v.high_commit_qc.vote_info.round)
         vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
+
         if vote_idx in self.pending_votes:
             self.pending_votes[vote_idx].append(v.signature)
         else:
             self.pending_votes[vote_idx] = [v.signature]
+
         if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
             signatures_list=list(self.pending_votes[vote_idx])
             new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
+           # print("QC ban gya",self.validator_info["Main"]["u"])
+            # if self.high_qc is not None:
+            #     self.high_commit_qc=self.high_qc
+            # self.high_qc=new_qc
 
-            if self.high_qc is not None:
-                self.high_commit_qc=self.high_qc
-            self.high_qc=new_qc
             return new_qc
+       # print("waah ji waah qc nhi bana kynki consensus nhi mila",self.high_qc)
         return None
 
     '''

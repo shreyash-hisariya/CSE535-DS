@@ -32,11 +32,11 @@ class Ledger:
 
     def commit(self, block_id):
         # add persistent_ledger_states to disk
-
         if block_id in self.blockid_ledger_map:
             self.persistent_ledger_states[self.blockid_ledger_map[block_id]] = self.pending_ledger_states[
                 self.blockid_ledger_map[block_id]]
-            del self.pending_ledger_states[self.blockid_ledger_map[block_id]]
+            if self.blockid_ledger_map[block_id] in self.pending_ledger_states:
+                del self.pending_ledger_states[self.blockid_ledger_map[block_id]]
         else:
             pass
 
