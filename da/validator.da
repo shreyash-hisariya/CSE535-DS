@@ -38,7 +38,6 @@ class Validator(process):
         validator_info['BlockTree'] = self.block_tree
         self.safety = Safety('private_keys','public_keys',-1,-1,-1,validator_info)
 
-
         validator_info['Safety'] = self.safety
         self.pacemaker = Pacemaker(validator_info)
 
@@ -66,16 +65,9 @@ class Validator(process):
 
         await(False)
 
-#    def receive(msg=('LOCAL_TIMEOUT',)):
-#        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
-#        timeout_message=self.pacemaker.local_timeout_round()
-#        send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
-
-
     def receive(msg=('CLIENT_REQUEST', request)):
         client, cmd, cid = request
         #output("CLIENT_REQUEST RECEIVED - " + str(client) + str(cid))
-
         self.process_new_round_event(None,client,cmd)
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
@@ -85,13 +77,11 @@ class Validator(process):
         if self.u == 'v4':
             output("TIMING OUT V4 ")
             time.sleep(3)
-            print("********* sleep ke niche")
 
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
         if self.u == 'v4':
-            return
-            print('HADKHSASKFHASKFHAKSFHAKSDHASKHKASFHKSA')
+            print("********* SLEEP KE NICHE IN V4")
         self.process_proposal_msg(client, proposal_msg)
 
 
