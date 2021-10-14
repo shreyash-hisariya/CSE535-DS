@@ -7,21 +7,23 @@
 from Models.vote_info import VoteInfo
 from Models.ledger_commit_info import LedgerCommitInfo
 from Models.vote_msg import VoteMsg
+from Models.timeout_info import TimeoutInfo
 
 
 class Safety:
-    def __init__(self, validator_info=None):
+    def __init__(self, private_keys,public_keys,highest_vote_round,highest_qc_round,qc_round,validator_info=None):
         self.validator_info = validator_info
-        self.private_keys = 'private_keys'
-        self.public_keys = 'public_keys'
-        self.highest_vote_round = -1
-        self.highest_qc_round = -1
-        self.qc_round = -1
+        self.private_keys = private_keys#'private_keys'
+        self.public_keys = public_keys#'public_keys'
+        self.highest_vote_round =highest_vote_round# -1
+        self.highest_qc_round = highest_qc_round#-1
+        self.qc_round = qc_round # -1
 
     def valid_signatures(self, high_qc, last_tc):
         return True
 
     def increase_highest_vote_round(self, round):
+        print(self.validator_info["Main"]["u"],"AAAAAAAA GYE" )
         self.highest_vote_round = max(round, self.highest_vote_round)
 
     def update_highest_qc_round(self, qc_round):
@@ -42,10 +44,13 @@ class Safety:
 
         return self.consecutive(block_round, qc_round) and self.safe_to_extend(block_round, qc_round, tc)
 
+# 0 -1 None
     def safe_to_timeout(self, round, qc_round, tc):
+        print(round, qc_round, self.highest_vote_round)
         if qc_round < self.highest_vote_round or round <= max(self.highest_vote_round - 1, qc_round):
             return False
-        return self.consecutive(round, qc_round) or self.consecutive(round, tc.round)
+        print('kashfklashfklhasklfhklashfklashfklahs')
+        return self.consecutive(round, qc_round) or self.consecutive(round, tc.round) # handle tc none
 
     def commit_state_id_candidate(self, block_round, qc):
         if qc is None:
@@ -88,16 +93,25 @@ class Safety:
             else:
                 ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, None), hash_vote_info)
 
+
             signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
         return None
 
     def make_timeout(self, round, high_qc, last_tc):
-        self.qc_round = high_qc.vote_info.round
+
+        if high_qc is None:
+            self.qc_round = -1
+            high_qc_sign = 'None'
+        else:
+            self.qc_round = high_qc.vote_info.round
+            high_qc_sign = str(high_qc.vote_info.round)
         # TO DO validation of signatures
+        print('-------------!!!!!!!!!!!!!!!!!!!!!!!')
         if self.valid_signatures(high_qc, last_tc) and self.safe_to_timeout(round, self.qc_round, last_tc):
+            print('!!!!!!!!!!!!!!!!!!!!!!!')
             self.increase_highest_vote_round(round)
-            signature = str(round) + str(high_qc.vote_info.round)
+            signature = str(round) + high_qc_sign
             return TimeoutInfo(round, high_qc, self.validator_info["Main"]["u"], signature)
         return None

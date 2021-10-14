@@ -11,11 +11,9 @@ from pacemaker import Pacemaker
 from mempool import Mempool
 from leader_election import Leader_election
 from Models.proposal_message import ProposalMessage
-
 ID = 0
 PROCESS_ID = 1
 IP = 2
-
 
 class Validator(process):
     def setup(idx, validator_dict, n_validators):
@@ -38,7 +36,8 @@ class Validator(process):
         validator_info = {'Main' : main_dict, 'Ledger' : self.ledger}
         self.block_tree = Block_tree(validator_info)
         validator_info['BlockTree'] = self.block_tree
-        self.safety = Safety(validator_info)
+        self.safety = Safety('private_keys','public_keys',-1,-1,-1,validator_info)
+
 
         validator_info['Safety'] = self.safety
         self.pacemaker = Pacemaker(validator_info)
@@ -48,22 +47,30 @@ class Validator(process):
         validator_info['validator_dict'] = self._validator_dict # need to verify
         validator_info['Pacemaker']=self.pacemaker
         self.leader_election = Leader_election(validator_info)
+        self.run_done = False
 
     def run():
-        run_done = False
-        while not run_done:
-            round_done = False
-            timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
-            if await(round_done):
-                pass
-            elif timeout(timer_duration) :
-                self.pacemaker.local_timeout_round()
 
-     #   await(False)
+        if self.u=="v4":
+            while not self.run_done:
+                round_done = False
+                timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
+                if await(round_done):
+                    pass
+                elif timeout(timer_duration) :
+                    output('TIMER TIMER TIMER TIMER')
+                    timeout_message = self.pacemaker.local_timeout_round()
+                    send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
+                    self.run_done=True
+                    break
 
-    def receive(msg=('LOCAL_TIMEOUT',)):
-        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
-        pass
+        await(False)
+
+#    def receive(msg=('LOCAL_TIMEOUT',)):
+#        output("LOCAL_TIMEOUT MESSAGE RECEIVED.")
+#        timeout_message=self.pacemaker.local_timeout_round()
+#        send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
+
 
     def receive(msg=('CLIENT_REQUEST', request)):
         client, cmd, cid = request
@@ -78,8 +85,13 @@ class Validator(process):
         if self.u == 'v4':
             output("TIMING OUT V4 ")
             time.sleep(3)
+            print("********* sleep ke niche")
+
         # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
         # to do : how to handle duplicate msg
+        if self.u == 'v4':
+            return
+            print('HADKHSASKFHASKFHAKSFHAKSDHASKHKASFHKSA')
         self.process_proposal_msg(client, proposal_msg)
 
 
@@ -88,8 +100,11 @@ class Validator(process):
         output("SELF ",self.u, "VOTE_MESSAGE RECEIVED FROM VALIDATOR ", validator_id,"FOR ROUND",vote_msg.vote_info.round)
         self.process_vote_msg(validator_id, vote_msg)
 
-    def receive(msg=('TIMEOUT_MESSAGE',)):
-        output("TIMEOUT_MESSAGE RECEIVED.")
+    def receive(msg=('TIMEOUT_MESSAGE',m)):
+
+        validator_id, timeout_msg = m
+        output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info.sender, " --- ", timeout_msg.tmo_info.block_round)
+        #self.process_timeout_msg(timeout_msg)
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
         # add code for decrypting votemsg info (check page no 10)
@@ -98,7 +113,7 @@ class Validator(process):
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
             self.process_new_round_event(None, None, None) #verify the arguments
-
+        #print("DONE Process Vote",validator_id," SELF ",self.u)
 
     def process_timeout_msg(M):
         #add code for decrypting timeout info (check page no 12)
@@ -112,13 +127,11 @@ class Validator(process):
 
     # v3 ne bheja none none for qc of qc
     def process_new_round_event(last_tc,client,M):  #Function def changed to include client
-
         if M is None or self.u == self.leader_election.get_leader(self.pacemaker.current_round):
             #add to mempool
             self.mempool.add_transaction(M,"PENDING")
             self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
             # TO DO broadcast
-
             p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc, self.u)
             if M is None:
                 sender_list=[]
@@ -130,7 +143,6 @@ class Validator(process):
             else:
                 send(('PROPOSAL_MESSAGE', (client, p)), to=list(self._validator_dict.values()))
 
-
     def verify_signatures(block):
         hash_of_current_block=hash(block.author,block.block_round,block.payload,block.qc.vote_info.id,block.qc.signatures)
         if hash_of_current_block==block.block_id:
@@ -139,7 +151,9 @@ class Validator(process):
 
 
     def process_proposal_msg(client, P): #Function def changed to include client
+
         #self.verify_signatures(P.block) #need to verify
+
         self.process_certificate_qc(P.block.qc)
         self.process_certificate_qc(P.high_commit_qc)
 
@@ -149,8 +163,10 @@ class Validator(process):
         self.round = self.pacemaker.current_round
 
         self.leader = self.leader_election.get_leader(self.round) # need to verify
+
         if P.block.payload is None:
             output('SELF ', self.u, ' FINAL LEDGER STATE ', self.ledger.persistent_ledger_states)
+
             return
         if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
             return
@@ -164,8 +180,8 @@ class Validator(process):
 
 
     def process_certificate_qc(qc):
-
         self.block_tree.process_qc(qc)     #do we need to broadcast the updated qc
         self.leader_election.update_leaders(qc) #do we need to broadcast the updated leader
         if qc is not None:
             self.pacemaker.advance_round_qc(qc)#need to verify
+
