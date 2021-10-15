@@ -17,7 +17,7 @@ class Client(process):
 
     def run():
         for i in range(NOPS):
-            cmd = str(self.client_id) + " - " + str(i)
+            cmd = str(self.client_id) + " - " + str(i%2)
             print("MAIN CMDDD ",cmd)
             send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
             #await(cid in results)
@@ -28,13 +28,13 @@ class Client(process):
         #output('terminating')
         #send(('done',), to=parent())
 
-    def receive(msg= ('response', cid, result)):
-        debug('### response', cid, result)
-        if cid not in results:
-            results[cid] = result
-        elif results[cid] != result:
-            error('different result', cid, result, 'than', results[cid])
-        count[cid] = 1 if cid not in count else count[cid] + 1
+    def receive(msg= ('RESPONSE', cmd, result)):
+        output('PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP', cmd, result)
+        #if cid not in results:
+        #    results[cid] = result
+        #elif results[cid] != result:
+        #    error('different result', cid, result, 'than', results[cid])
+        #count[cid] = 1 if cid not in count else count[cid] + 1
 
 def main():
 

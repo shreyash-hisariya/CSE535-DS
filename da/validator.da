@@ -65,6 +65,11 @@ class Validator(process):
 
     def receive(msg=('CLIENT_REQUEST', request)):
         client, cmd, cid = request
+
+
+        if cmd in self.results.keys():
+            send(('RESPONSE',(cmd,self.results[cmd])),to=client)
+            return
         #output("CLIENT_REQUEST RECEIVED - " + str(client) + str(cid))
         output(" PURANA RESULTS FOR CMD1 - ", self.results)
         self.mempool.add_transaction(cmd,"PENDING")
