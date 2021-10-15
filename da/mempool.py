@@ -23,10 +23,12 @@ class Mempool:
     def add_transaction(self,M,state):
         if M is None:
             return
+
         self.transactions[M]=state
+        print(self.validator_info["Main"]["u"]," STATE 1: ", M, " ", self.transactions)
 
     def update_transaction(self, M, state):
-
-        if str(M[0]) in self.transactions:
-            self.transactions[str(M[0])] = state
+        if M in self.transactions:
+            self.transactions[M] = state
+            print(self.validator_info["Main"]["u"]," STATE 2: ", str(M), " ", self.transactions)
 

@@ -31,6 +31,7 @@ class Ledger:
         ledger_state_id=hash(ledger_state_id)
         self.blockid_ledger_map[block_id] = ledger_state_id
         self.pending_ledger_states[ledger_state_id] = [block_id, txns]
+        print("check check",txns)
 
     def pending_state(self, block_id):
         if block_id in self.blockid_ledger_map:
@@ -42,7 +43,7 @@ class Ledger:
 
             self.persistent_ledger_states[self.blockid_ledger_map[block_id]] = self.pending_ledger_states[self.blockid_ledger_map[block_id]]
             self.writeToFile(self.blockid_ledger_map[block_id],self.pending_ledger_states[self.blockid_ledger_map[block_id]])
-            self.validator_info["Mempool"].update_transaction(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1], 'COMPLETE')
+            self.validator_info["Mempool"].update_transaction(str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1][0]), 'COMPLETE')
             print("Writing to file")
             print("TRANSACTION : ", self.pending_ledger_states[self.blockid_ledger_map[block_id]][1])
             self.validator_info["Main"]["results"][str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1])] = "COMPLETED"

@@ -72,6 +72,7 @@ class Validator(process):
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
 
+
         client, proposal_msg = m
 #        if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
 #           output("TIMING OUT  ",self.u)
@@ -127,7 +128,15 @@ class Validator(process):
 
         if M is None or self.u == self.leader_election.get_leader(self.pacemaker.current_round):
 
-            self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
+            print(self.u," ", self.pacemaker.current_round, " Transactions while creating block",self.mempool.get_transactions())
+
+            if M is not None:
+                transaction=self.mempool.get_transactions()
+                for t in transaction:
+                    self.mempool.update_transaction(t,"PROCESSING")
+                self.b = self.block_tree.generate_block(transaction, self.pacemaker.current_round)
+            else:
+                self.b = self.block_tree.generate_block([], self.pacemaker.current_round)
 
             # TO DO broadcast
             p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc, self.u)
@@ -153,6 +162,7 @@ class Validator(process):
 
     def process_proposal_msg(client, P): #Function def changed to include client
 
+
         #self.verify_signatures(P.block) #need to verify
         self.process_certificate_qc(P.block.qc)
         self.process_certificate_qc(P.high_commit_qc)
@@ -172,6 +182,9 @@ class Validator(process):
         self.vote_msg = self.safety.make_vote(P.block, P.last_round_tc)
 
         if self.vote_msg is not None:
+            for t in P.block.payload:
+                self.mempool.update_transaction(t,"PROCESSING")
+
             send(('VOTE_MESSAGE', (self.u, self.vote_msg)), to=self._validator_dict[self.leader_election.get_leader(self.round+1)]) # need to verify
 
 
