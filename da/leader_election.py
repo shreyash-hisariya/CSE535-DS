@@ -17,25 +17,38 @@ class Leader_election:
         self.reputation_leaders = {}
 
     def elect_reputation_leader(self, qc):
+
         active_validators = []
         last_authors = []
         current_qc = qc
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
             current_block = self.validator_info["Ledger"].committed_block(current_qc.vote_info.parent_id)
+
             block_author = current_block.author
+
             if i < self.window_size:
                 active_validators = active_validators + current_qc.signatures.signers()
+
             if len(last_authors) < self.exclude_size:
                 last_authors = last_authors + [block_author]
             current_qc = current_block.qc
             i = i + 1
+
         active_validators = [i for i in active_validators if i not in last_authors]
+
         random.seed(qc.vote_info.round)
         random.shuffle(active_validators)
+
+
+        if len(active_validators)==0:
+            return -1;
         return active_validators[0]
 
     def update_leaders(self, qc):
+
+
+
         if qc is None:
             # print("return from update_leaders as qc is None")
             return
@@ -47,7 +60,16 @@ class Leader_election:
         # shreyas: every replica should be in some consesus
 
         if extended_round + 1 == qc_round and qc_round + 1 == current_round:
-            self.reputation_leaders[current_round + 1].append(self.elect_reputation_leader(qc))
+            print("00000000 ****************")
+
+            candidate=self.elect_reputation_leader(qc)
+            if current_round + 1 in self.reputation_leaders:
+                if candidate!=-1:
+                    self.reputation_leaders[current_round + 1].append(self.elect_reputation_leader(qc))
+            else:
+                if candidate != -1:
+                    self.reputation_leaders[current_round + 1]=[self.elect_reputation_leader(qc)]
+            print("99999999 ****************")
             ###Saurabh: self.reputation_leaders[current_round + 1] needs to be list or a single value
             ###Saurabh: should we broadcast this to everyone so that there is a consensus for the next leader
 

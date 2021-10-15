@@ -166,3 +166,17 @@
 #         self.leader_election.update_leaders(qc)  # do we need to broadcast the updated leader
 #         if qc is not None:
 #             self.pacemaker.advance_round_qc(qc)  # need to verify
+
+if self.u=="v4" or self.u == 'v1'  or self.u == 'v2':
+            while not self.run_done:
+                round_done = False
+                timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
+                if await(round_done):
+                    pass
+                elif timeout(timer_duration) :
+
+                    timeout_message = self.pacemaker.local_timeout_round()
+                    print("BROAD CAST TIMEOUT MESSAGE FROM - ",self.u, " FOR ROUND - ", self.pacemaker.current_round)
+                    send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
+                    self.run_done=True
+                    break

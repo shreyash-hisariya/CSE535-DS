@@ -62,8 +62,8 @@ class Safety:
         else:
             return None
 
-    def hash_func(self, a, b, c, d, e):
-        return str(a) + str(e) + str(b) + str(c) + str(d)
+    def hash_func(self, a="", b="", c="", d="", e=""):
+        return hash(str(a) + str(e) + str(b) + str(c) + str(d))
 
     def make_vote(self, b, last_tc):
 
@@ -104,6 +104,7 @@ class Safety:
 
 
             signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
+            print("WOOOOOOOOOOW")
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
         return None
