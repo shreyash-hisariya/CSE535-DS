@@ -11,13 +11,16 @@ from Models.timeout_info import TimeoutInfo
 
 
 class Safety:
-    def __init__(self, private_keys,public_keys,highest_vote_round,highest_qc_round,qc_round,validator_info=None):
+    def __init__(self, private_key,public_keys,highest_vote_round,highest_qc_round,qc_round,validator_info=None):
         self.validator_info = validator_info
-        self.private_keys = private_keys#'private_keys'
+        self.private_key = private_key#'private_keys'
         self.public_keys = public_keys#'public_keys'
         self.highest_vote_round =highest_vote_round# -1
         self.highest_qc_round = highest_qc_round#-1
         self.qc_round = qc_round # -1
+
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
 
     def valid_signatures(self, high_qc, last_tc):
         return True
@@ -102,7 +105,8 @@ class Safety:
                 ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, None), hash_vote_info)
 
 
-            signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
+            #signature = str(ledger_commit_info)  # done
+            signature = self.private_key.sign(str(str(ledger_commit_info.commit_state_id)+str(ledger_commit_info.vote_info_hash)).encode('utf-8'))
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
         return None
@@ -120,7 +124,8 @@ class Safety:
         if self.valid_signatures(high_qc, last_tc) and self.safe_to_timeout(round, self.qc_round, last_tc):
 
             self.increase_highest_vote_round(round)
-            signature = str(round) + high_qc_sign
+            #signature = str(round) + high_qc_sign
+            signature = self.validator_info["Main"]["signature_dict"]["private_key"].sign(str(str(round) + high_qc_sign).encode('utf-8'))
 
             return TimeoutInfo(round, high_qc, self.validator_info["Main"]["u"], signature)
         return None

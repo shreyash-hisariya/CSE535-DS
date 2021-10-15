@@ -17,8 +17,12 @@ class Ledger:
         self.persistent_ledger_file=persistent_ledger_file
         self.committed_block_map=committed_block_map#{} key blockId, value=block
 
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
+
     def addToCommitedBlock(self,block):
         self.committed_block_map[block.id]=block
+
 
     def speculate(self, prev_block_id, block_id, txns):
         # hashing to create the ledger state id.
