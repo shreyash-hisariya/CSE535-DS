@@ -15,6 +15,8 @@ class Pacemaker:
         self.pending_timeouts = pending_timeouts#{}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
         self.pending_timeouts_senders = pending_timeouts_senders#{}  # extra dictionary of set (key:round,value:set of tmo_info.senders  getting timed_out) : may have to verify
 
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
     def get_round_timer(self, r):
         # distAlgo: set timer for a round expiry
         return 2

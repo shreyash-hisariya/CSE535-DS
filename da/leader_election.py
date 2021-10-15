@@ -16,6 +16,9 @@ class Leader_election:
         self.exclude_size = 1
         self.reputation_leaders = {}
 
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
+
     def elect_reputation_leader(self, qc):
 
         active_validators = []
