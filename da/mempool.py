@@ -24,12 +24,9 @@ class Mempool:
         if M is None:
             return
         self.transactions[M]=state
-        print(self.validator_info["Main"]["u"], ' ADDDDDDINNNNNGGG TAENASTION COMPLETED', self.transactions.items())
 
     def update_transaction(self, M, state):
 
         if str(M[0]) in self.transactions:
-            print(self.validator_info["Main"]["u"], '1111 UPDATEING TAENASTION COMPLETED', self.transactions.items())
             self.transactions[str(M[0])] = state
-            print(self.validator_info["Main"]["u"], ' 222 UPDATEING TAENASTION COMPLETED', self.transactions.items())
 

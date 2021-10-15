@@ -22,10 +22,8 @@ class Ledger:
 
     def speculate(self, prev_block_id, block_id, txns):
         # hashing to create the ledger state id.
-        print("block block block",block_id)
         if prev_block_id not in self.blockid_ledger_map:
             ledger_state_id = str(-1) + str(txns)  ## need to verify
-            print(self.validator_info["Main"]["u"],block_id,"AREYYYYYYY MARO",ledger_state_id)
         else:
             ledger_state_id = str(self.blockid_ledger_map[prev_block_id]) + str(txns)
 
@@ -33,7 +31,6 @@ class Ledger:
         ledger_state_id=hash(ledger_state_id)
         self.blockid_ledger_map[block_id] = ledger_state_id
         self.pending_ledger_states[ledger_state_id] = [block_id, txns]
-        print(block_id," ",self.validator_info["Main"]["u"], "****ADDDDD******pending_ledger_states*****")
 
     def pending_state(self, block_id):
         if block_id in self.blockid_ledger_map:
@@ -43,18 +40,14 @@ class Ledger:
         # add persistent_ledger_states to disk
         if block_id in self.blockid_ledger_map and self.blockid_ledger_map[block_id] in  self.pending_ledger_states:
 
-            #print(self.validator_info["Main"]["u"],"**********pending_ledger_states*****",block_id, " !!!!! ",self.blockid_ledger_map[block_id])
             self.persistent_ledger_states[self.blockid_ledger_map[block_id]] = self.pending_ledger_states[self.blockid_ledger_map[block_id]]
             self.writeToFile(self.blockid_ledger_map[block_id],self.pending_ledger_states[self.blockid_ledger_map[block_id]])
             self.validator_info["Mempool"].update_transaction(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1], 'COMPLETE')
             print("Writing to file")
+            print("TRANSACTION : ", self.pending_ledger_states[self.blockid_ledger_map[block_id]][1])
+            self.validator_info["Main"]["results"][str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1])] = "COMPLETED"
             if self.blockid_ledger_map[block_id] in self.pending_ledger_states:
-                print(self.validator_info["Main"]["u"], "****DELETEEEEE******pending_ledger_states*****", block_id, " !!!!! ",
-                      self.blockid_ledger_map[block_id])
-                print(self.blockid_ledger_map[block_id],"11111HELLLLLLLLL",self.pending_ledger_states)
                 del self.pending_ledger_states[self.blockid_ledger_map[block_id]]
-
-
         else:
             pass
 

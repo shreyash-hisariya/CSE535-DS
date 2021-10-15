@@ -40,10 +40,8 @@ class Block_tree:
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
             ###shreyas: need to revisit
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
-            print("222222HELLLLLLLLL")
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
-            print("33333HELLLLLLLLL")
 
             # self.high_commit_qc = self.getMaxRound(qc, self.high_commit_qc)
             self.getMaxRound(qc, self.high_commit_qc,True)
@@ -64,9 +62,7 @@ class Block_tree:
         else:
             self.validator_info["Ledger"].speculate(b.qc.vote_info.id, b.id, b.payload)
 
-
         self.pending_block_tree[b.id]=b
-        print("33333 ****************")
         self.validator_info["Ledger"].addToCommitedBlock(b)
 
     def process_vote(self,v):
@@ -151,7 +147,5 @@ class Block_tree:
         # list_of_ledger_ids=[val for key,val in enumerate(Ledger.id_map) ]
 
         for ledger_id in list_of_ledger_ids:
-            #print("44444444HELLLLLLLLL", len(list_of_ledger_ids))
             if ledger_id in self.validator_info["Ledger"].pending_ledger_states:
                 del self.validator_info["Ledger"].pending_ledger_states[ledger_id]
-            #print("5555555HELLLLLLLLL", len(list_of_ledger_ids))

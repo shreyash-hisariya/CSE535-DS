@@ -8,15 +8,16 @@ def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
 
 class Client(process):
-    def setup(idx, validators, NOPS):
+    def setup(idx, client_id, validators, NOPS):
         self.idx = idx
+        self.client_id = client_id
         self.cid = 0           # command id
         self.results = dict()  # map of command id to result of command
         self.count = dict()    # map of command id to number of responses
 
     def run():
         for i in range(NOPS):
-            cmd = str(idx) + " - " + str(cid) + " - " + str(i)
+            cmd = str(self.client_id) + " - " + str(i)
             print("MAIN CMDDD ",cmd)
             send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
             #await(cid in results)
@@ -54,7 +55,7 @@ def main():
        setup(validators[i], args=(validator_ids[i], validator_dict, n_validators))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], validators, NOPS))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, NOPS))
 
     start(validators)
     start(clients)
