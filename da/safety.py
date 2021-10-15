@@ -39,7 +39,6 @@ class Safety:
 
     def safe_to_vote(self, block_round, qc_round, tc):
 
-
         if block_round <= max(self.highest_vote_round, qc_round):
             return False
 
@@ -104,7 +103,6 @@ class Safety:
 
 
             signature = str(ledger_commit_info)  # check at every place where hash or private/public keys are required
-            print("WOOOOOOOOOOW")
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
         return None
@@ -118,7 +116,7 @@ class Safety:
             self.qc_round = high_qc.vote_info.round
             high_qc_sign = str(high_qc.vote_info.round)
         # TO DO validation of signatures
-        #print('-------------!!!!!!!!!!!!!!!!!!!!!!!')
+
         if self.valid_signatures(high_qc, last_tc) and self.safe_to_timeout(round, self.qc_round, last_tc):
 
             self.increase_highest_vote_round(round)

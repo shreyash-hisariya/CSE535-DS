@@ -8,15 +8,16 @@ def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
 
 class Client(process):
-    def setup(idx, validators, NOPS):
+    def setup(idx, client_id, validators, NOPS):
         self.idx = idx
+        self.client_id = client_id
         self.cid = 0           # command id
         self.results = dict()  # map of command id to result of command
         self.count = dict()    # map of command id to number of responses
 
     def run():
         for i in range(NOPS):
-            cmd = str(idx) + " - " + str(cid) + " - " + str(i)
+            cmd = str(self.client_id) + " - " + str(i%2)
             print("MAIN CMDDD ",cmd)
             send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
             #await(cid in results)
@@ -27,13 +28,13 @@ class Client(process):
         #output('terminating')
         #send(('done',), to=parent())
 
-    def receive(msg= ('response', cid, result)):
-        debug('### response', cid, result)
-        if cid not in results:
-            results[cid] = result
-        elif results[cid] != result:
-            error('different result', cid, result, 'than', results[cid])
-        count[cid] = 1 if cid not in count else count[cid] + 1
+    def receive(msg= ('RESPONSE', cmd, result)):
+        output('PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP', cmd, result)
+        #if cid not in results:
+        #    results[cid] = result
+        #elif results[cid] != result:
+        #    error('different result', cid, result, 'than', results[cid])
+        #count[cid] = 1 if cid not in count else count[cid] + 1
 
 def main():
 
@@ -54,7 +55,7 @@ def main():
        setup(validators[i], args=(validator_ids[i], validator_dict, n_validators))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], validators, NOPS))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, NOPS))
 
     start(validators)
     start(clients)

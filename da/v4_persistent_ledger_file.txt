@@ -1,10 +1,3 @@
 
-New Commit: v4 ledger_state_id: 6466364146075377073 block_id: 7969239887088326404 Transaction: ['<Client:c8c06> - 0 - 0']
-New Commit: v4 ledger_state_id: -5792094581159748586 block_id: -1841767612159848297 Transaction: ['<Client:c8c06> - 0 - 0', '<Client:c8c06> - 1 - 1']
-New Commit: v4 ledger_state_id: -2030815132810248560 block_id: 3570808735546901382 Transaction: ['<Client:c8c06> - 1 - 1', '<Client:c8c06> - 2 - 2']
-New Commit: v4 ledger_state_id: 7821693206896244710 block_id: -1079059069511521058 Transaction: ['<Client:c8c06> - 1 - 1', '<Client:c8c06> - 2 - 2', '<Client:c8c06> - 3 - 3']
-New Commit: v4 ledger_state_id: -4881110380996760198 block_id: -1372418149835366794 Transaction: ['<Client:c8c06> - 2 - 2', '<Client:c8c06> - 3 - 3', '<Client:c8c06> - 4 - 4']
-New Commit: v4 ledger_state_id: 6076760772751982177 block_id: -490735416110675066 Transaction: ['<Client:c8c06> - 2 - 2', '<Client:c8c06> - 3 - 3', '<Client:c8c06> - 4 - 4', '<Client:c8c06> - 5 - 5']
-New Commit: v4 ledger_state_id: -524272955478796028 block_id: -6686026770897141216 Transaction: ['<Client:c8c06> - 3 - 3', '<Client:c8c06> - 4 - 4', '<Client:c8c06> - 5 - 5', '<Client:c8c06> - 6 - 6']
-New Commit: v4 ledger_state_id: 3121053416121557749 block_id: -6827586282271109102 Transaction: ['<Client:c8c06> - 3 - 3', '<Client:c8c06> - 4 - 4', '<Client:c8c06> - 5 - 5', '<Client:c8c06> - 6 - 6', '<Client:c8c06> - 7 - 7']
-New Commit: v4 ledger_state_id: 4068396090124021343 block_id: 585840271597444977 Transaction: ['<Client:c8c06> - 4 - 4', '<Client:c8c06> - 5 - 5', '<Client:c8c06> - 6 - 6', '<Client:c8c06> - 7 - 7', '<Client:c8c06> - 8 - 8']
+New Commit: v4 ledger_state_id: -4629129137796102180 block_id: 7153495598002055426 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -6841112762703054268 block_id: 8241503353516521701 Transaction: ['c1 - 1']
