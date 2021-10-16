@@ -71,7 +71,7 @@ class Block_tree:
             self.validator_info["Ledger"].speculate(b.qc.vote_info.id, b.id, b.payload)
 
         self.pending_block_tree[b.id]=b
-        self.validator_info["Ledger"].addToCommitedBlock(b)
+        #self.validator_info["Ledger"].addToCommitedBlock(b)
 
     def process_vote(self,v):
 
