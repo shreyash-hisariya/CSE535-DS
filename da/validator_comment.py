@@ -180,3 +180,33 @@ if self.u=="v4" or self.u == 'v1'  or self.u == 'v2':
                     send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
                     self.run_done=True
                     break
+
+
+
+
+    #
+    # n_validators = 4
+    # n_clients = 1
+    # validator_ids = ['v1', 'v2', 'v3', 'v4']
+    # client_ids = ['c1']
+
+    # validators = list(new(validator.Validator, num= n_validators))
+    # clients = list(new(Client, num= n_clients))
+    # list_signature_dict=generateKeysForValidators(validator_ids)
+
+#     validator_dict = OrderedDict()
+#     for i in range(0, len(validator_ids)):
+#         id = validators[i]
+#         validator_dict[validator_ids[i]]=id
+#
+#     for i in range(n_validators):
+#        setup(validators[i], args=(validator_ids[i], validator_dict, n_validators,list_signature_dict[i]))
+#
+#     for i in range(n_clients):
+#        setup(clients[i], args=(clients[i], client_ids[i], validators, NOPS))
+#
+#     start(validators)
+#     start(clients)
+#     await(each(c in clients, has=received(('done',), from_=c)))
+#     output('All clients done.')
+# #    send(('done',), to= (acceptors|replicas|leaders))
