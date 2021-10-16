@@ -109,9 +109,9 @@ class Validator(process):
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
         client, proposal_msg,author_of_proposal = m
-        #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
-        #    time.sleep(3)
-        #    return
+        if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
+            time.sleep(3)
+            return
 
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
