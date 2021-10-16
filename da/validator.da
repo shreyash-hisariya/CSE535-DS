@@ -16,12 +16,12 @@ from Models.proposal_message import ProposalMessage
 
 class Validator(process):
 
-    def setup(idx, validator_dict, n_validators, signature_dict, clients):
+    def setup(idx, validator_dict, n_validators, signature_dict, client_dict):
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
         self._n_validators = n_validators
-        self.clients = clients
+        self.client_dict = client_dict
 
         self._signature_dict=signature_dict
         self.round = 0
@@ -34,7 +34,7 @@ class Validator(process):
         self.results = {}
         self.client_results = {}
 
-        print("VALIDATOR:",self.u," My keys: ",self._signature_dict)
+        #print("VALIDATOR:",self.u," My keys: ",self._signature_dict)
         main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
 
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
@@ -62,11 +62,7 @@ class Validator(process):
         self.safety.setValidator_info(validator_info);
         self.pacemaker.setValidator_info(validator_info);
         self.leader_election.setValidator_info(validator_info);
-
-        #print("LEDGER FILE NAME",str(self.u)+str("persistent_ledger_file.txt"))
-
         self.run_done = False
-        self.curr_client = None
 
     def run():
 
@@ -77,7 +73,7 @@ class Validator(process):
             if await(len(self.client_results) > 0):
                 output(' SENDING BACK TO CLIENT')
                 for cmd in self.client_results.keys():
-                    send(('RESULT_RESPONSE',(cmd, "SUCCESS")), to=clients)
+                    send(('RESULT_RESPONSE',(cmd, "SUCCESS")), to=self.get_client(cmd))
                 self.client_results.clear()
                 self.run_done=False
             elif timeout(timer_duration) :
@@ -87,21 +83,20 @@ class Validator(process):
                 #self.verifySignature(timeoutmsg.tmo_info.sender,timeoutmsg.tmo_info.signature)
                 print("BROAD CAST TIMEOUT MESSAGE FROM - ", self.u, " FOR ROUND - ", self.pacemaker.current_round)
                 send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
-                break
+                #break
 
         await(self.pacemaker.current_round > 7)
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
-        client, cmd, cid = request
-        self.curr_client = client
+        client, cmd = request
         #if cmd in self.results.keys():
         #    output('RESULT CACHED FOR COMMAND - ', cmd, ' .RETURNING RESULT TO CLIENT - ', self.curr_client)
         #    send(('RESULT_RESPONSE',(cmd,self.results[cmd])),to=self.curr_client)
         #    return
 
         self.mempool.add_transaction(cmd,"PENDING")
-        print(self.u,cmd," LAST ROUND TC ",self.pacemaker.last_round_tc, ' LEADER - ', self.leader_election.get_leader(self.pacemaker.current_round))
+        #print(self.u,cmd," LAST ROUND TC ",self.pacemaker.last_round_tc, ' LEADER - ', self.leader_election.get_leader(self.pacemaker.current_round))
         if self.pacemaker.last_round_tc is not None:
             print("arey ",self.pacemaker.last_round_tc)
         self.process_new_round_event(self.pacemaker.last_round_tc,client,cmd)
@@ -109,9 +104,9 @@ class Validator(process):
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
         client, proposal_msg,author_of_proposal = m
-        #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
-        #    time.sleep(3)
-        #    return
+        if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
+            time.sleep(3)
+            return
 
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
@@ -128,6 +123,10 @@ class Validator(process):
             #output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
             self.process_timeout_msg(timeout_msg)
 
+    def get_client(cmd):
+        cmd = cmd.replace(" ", "")
+        client_id = cmd.split("-")[0]
+        return self.client_dict[client_id]
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
 
@@ -167,7 +166,7 @@ class Validator(process):
 
             # TO DO broadcast
             signature=self._signature_dict["private_key"].sign(str(block.id).encode('utf-8'))
-            print(block.id,":PROPOSAL signature",signature)
+            #print(block.id,":PROPOSAL signature",signature)
             p = ProposalMessage(block, last_tc, self.block_tree.high_commit_qc, signature)
             #print("author_of_proposal ",self.u, "P.signature ",p.signature)
 
@@ -216,12 +215,13 @@ class Validator(process):
         self.leader = self.leader_election.get_leader(self.round) # need to verify
 
         if client is None or P.block.payload is None:
-            #if P.last_round_tc is not None:
-                #print(self.pacemaker.current_round,self.leader,"Wow",P.last_round_tc , " and   ",self.pacemaker.last_round_tc)
-            #self.run_done = True
+            self.run_done = True
             return
 
-        if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+        #if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+        #    return
+
+        if P.block.round != self.round and author_of_proposal != self.leader and P.block.author != self.leader:
             return
 
         self.block_tree.execute_and_insert(P.block)

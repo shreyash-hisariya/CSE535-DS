@@ -24,10 +24,8 @@ class Client(process):
     def run():
         for i in range(NOPS):
             cmd = str(self.client_id) + " - " + str(i)
-            send(('CLIENT_REQUEST', (self, cmd, cid)), to=validators)
-            #send(('RESULT_RESPONSE', ("SUCCESS")), to=self)
+            send(('CLIENT_REQUEST', (self, cmd)), to=validators)
             time.sleep(client_delay_between_request)
-            #time.sleep(2)
             cid += 1
         #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
         #output('terminating')
@@ -70,7 +68,7 @@ def main():
 
     with open('config.json',encoding='utf-8-sig') as f:
         config = json.load(f)
-    print(config)
+
     n_validators = config["number_of_validators"]
     n_clients = config["number_of_clients"]
     validator_ids=[]
@@ -92,11 +90,16 @@ def main():
         id = validators[i]
         validator_dict[validator_ids[i]]=id
 
+    client_dict = OrderedDict()
+    for i in range(0, len(client_ids)):
+        id = clients[i]
+        client_dict[client_ids[i]]=id
+
     for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, list_signature_dict[i], clients))
+       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, list_signature_dict[i], client_dict))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS,client_delay_between_request))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request))
 
     start(validators)
     start(clients)
