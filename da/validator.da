@@ -16,14 +16,17 @@ from Models.proposal_message import ProposalMessage
 
 class Validator(process):
 
-    def setup(idx, validator_dict, n_validators, signature_dict, client_dict):
+
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict):
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
         self._n_validators = n_validators
         self.client_dict = client_dict
 
-        self._signature_dict=signature_dict
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+
         self.round = 0
         self.leader = 0
         self.vote_msg = None
@@ -73,7 +76,8 @@ class Validator(process):
             if await(len(self.client_results) > 0):
                 output(' SENDING BACK TO CLIENT')
                 for cmd in self.client_results.keys():
-                    send(('RESULT_RESPONSE',(cmd, "SUCCESS")), to=self.get_client(cmd))
+                    signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+                    send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS",signature)), to=self.get_client(cmd))
                 self.client_results.clear()
                 self.run_done=False
             elif timeout(timer_duration) :
@@ -89,7 +93,10 @@ class Validator(process):
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
-        client, cmd = request
+        client, cmd,signature = request
+        print("signature receive",signature)
+        self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)
+
         #if cmd in self.results.keys():
         #    output('RESULT CACHED FOR COMMAND - ', cmd, ' .RETURNING RESULT TO CLIENT - ', self.curr_client)
         #    send(('RESULT_RESPONSE',(cmd,self.results[cmd])),to=self.curr_client)
@@ -131,7 +138,9 @@ class Validator(process):
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
 
         #check sign here
-        self.verifySignature(M.sender,M.signature)
+
+
+        #self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))
         self.qc = self.block_tree.process_vote(M)
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
@@ -192,15 +201,20 @@ class Validator(process):
             return True
         return False
 
+    def generateSignRecur(signatures_list):
+        hash_of_all_sign=''
+        for i in range(0,len(signatures_list)):
+            hash_of_all_sign=str(hash(str(hash(signatures_list[i]))+hash_of_all_sign))
+
+        return hash_of_all_sign
 
     def process_proposal_msg(client, P,author_of_proposal): #Function def changed to include client
 
-        self.verifySignature(author_of_proposal,P.signature)
-
-
+        #self.verifySignature(author_of_proposal,P.signature,str(P.block.id).encode('utf-8'))
         if client is None or P.block.payload is None:
             #check qc sign
-            self.verifySignature(P.block.qc.author,P.block.qc.author_signature)
+            signatures_list=P.block.qc.signatures
+            #self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))
 
 
         #if P is not None and P.block.payload is not None:
@@ -242,12 +256,21 @@ class Validator(process):
             self.pacemaker.advance_round_qc(qc)#need to verify
 
 
-    def verifySignature(sender,msg):
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
         #check sign here
-        verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
         try:
-            verify_key.verify(msg)
+            verify_key.verify(signed_msg)
         except:
             print("Signature was forged or corrupt in vote msg sent by",sender)
             #think what has to be done (wait timeout
             return
+
+        if signed_msg.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+
+
+

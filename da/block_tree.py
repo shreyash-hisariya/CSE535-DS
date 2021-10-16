@@ -41,10 +41,9 @@ class Block_tree:
 
         #verify the author
         if qc is not None:
+
             signatures_list = qc.signatures
-            self.verifySignature(qc.author,qc.author_signature)
-
-
+            #self.verifySignature(P.block.qc.author, P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))
 
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
             ###shreyas: need to revisit
@@ -164,13 +163,15 @@ class Block_tree:
             if ledger_id in self.validator_info["Ledger"].pending_ledger_states:
                 del self.validator_info["Ledger"].pending_ledger_states[ledger_id]
 
-    def verifySignature(self,sender, msg):
-        # check sign here
-        verify_key = VerifyKey(self.validator_info["Main"]["signature_dict"]["validators_public_key"][sender])
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg):
+        #check sign here
+        verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
         try:
-            verify_key.verify(msg)
+            verify_key.verify(signed_msg)
         except:
-            print("Signature was forged or corrupt in vote msg sent by", sender)
-            # think what has to be done (wait timeout
+            print("Signature was forged or corrupt in vote msg sent by",sender)
+            #think what has to be done (wait timeout
             return
-        #print("OKKKKK Signature  in vote msg sent by", sender)
+
+        if signed.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)

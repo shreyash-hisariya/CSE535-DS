@@ -14,17 +14,24 @@ import io
 
 class Client(process):
 
-    def setup(idx, client_id, validators, NOPS, client_delay_between_request):
+
+    def setup(idx, client_id, validators, NOPS, client_delay_between_request,combined_public_signature_dict,private_key):
         self.idx = idx
         self.client_id = client_id
         self.cid = 0           # command id
         self.results = dict()  # map of command id to result of command
         self.count = dict()    # map of command id to number of responses
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+        self.client_delay_between_request=client_delay_between_request
+
 
     def run():
         for i in range(NOPS):
             cmd = str(self.client_id) + " - " + str(i)
-            send(('CLIENT_REQUEST', (self, cmd)), to=validators)
+            signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
+            print("signature client",signature)
+            send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
             time.sleep(client_delay_between_request)
             cid += 1
         #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
@@ -33,7 +40,8 @@ class Client(process):
         await(False)
 
     def receive(msg=('RESULT_RESPONSE', res)):
-        cmd, status = res
+        validator,cmd, status,signature = res
+        #self.verifySignature(validator,signature,"SUCCESS".encode('utf-8'))
         if cmd not in results:
             output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
             results[cmd] = status
@@ -41,28 +49,54 @@ class Client(process):
             error('different result', cid, status, 'than', results[cid])
         count[cid] = 1 if cid not in count else count[cid] + 1
 
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
+        #check sign here
 
-def generateKeysForValidators(validator_ids):
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
+        try:
+            verify_key.verify(signed_msg)
+        except:
+            print("Signature was forged or corrupt in vote msg sent by",sender)
+            #think what has to be done (wait timeout
+            return
+
+        if signed.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+
+
+def generateKeys(validator_ids,client_ids):
+
+
+
     #signature_dict{
     #   "validators_public_key":{"specific_validator_id":validator_public_key}
-    #   "private_key":value
+    #   "clients_public_key":{"specific_client_id":client_public_key}
     #   }
 
+
     #first generate signing_key for all the validators
-    private_signing_keys=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
-    public_signing_keys={}
-    for i in range(0,len(private_signing_keys)):
-        public_signing_keys[validator_ids[i]]=private_signing_keys[i].verify_key.encode()
+    private_keys_validators=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
+    private_keys_clients=[SigningKey.generate() for i in range(0,len(client_ids)) ]
+
+
+    public_signing_keys_validators={}
+    for i in range(0,len(private_keys_validators)):
+        public_signing_keys_validators[validator_ids[i]]=private_keys_validators[i].verify_key.encode()
+
+    public_signing_keys_clients={}
+    for i in range(0,len(private_keys_clients)):
+        public_signing_keys_clients[client_ids[i]]=private_keys_clients[i].verify_key.encode()
 
     #lets create signature_dict for all the validators
-    list_signature_dict=[]
-    for i in range(0,len(validator_ids)):
-        signature_dict={}
-        signature_dict["validators_public_key"]=public_signing_keys
-        signature_dict["private_key"]=private_signing_keys[i]
-        list_signature_dict.append(signature_dict)
+    combined_public_signature_dict={}
+    combined_public_signature_dict["validators_public_key"]=public_signing_keys_validators
+    combined_public_signature_dict["clients_public_key"]=public_signing_keys_clients
 
-    return list_signature_dict
+
+    return combined_public_signature_dict,private_keys_validators,private_keys_clients
 
 def main():
 
@@ -83,7 +117,7 @@ def main():
 
     validators = list(new(validator.Validator, num= n_validators))
     clients = list(new(Client, num= n_clients))
-    list_signature_dict=generateKeysForValidators(validator_ids)
+    combined_public_signature_dict,private_keys_validators,private_keys_clients=generateKeys(validator_ids,client_ids)
 
     validator_dict = OrderedDict()
     for i in range(0, len(validator_ids)):
@@ -96,10 +130,10 @@ def main():
         client_dict[client_ids[i]]=id
 
     for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, list_signature_dict[i], client_dict))
+       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))
 
     start(validators)
     start(clients)
