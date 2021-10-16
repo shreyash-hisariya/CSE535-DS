@@ -4,7 +4,8 @@ import random
 import validator as validator
 from collections import OrderedDict
 from nacl.signing import SigningKey
-
+import json
+import io
 
 NOPS = 10
 def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
@@ -12,7 +13,7 @@ operations = {i: operation(i) for i in range(NOPS)}
 
 
 class Client(process):
-    def setup(idx, client_id, validators, NOPS):
+    def setup(idx, client_id, validators, NOPS,client_delay_between_request):
         self.idx = idx
         self.client_id = client_id
         self.cid = 0           # command id
@@ -26,7 +27,7 @@ class Client(process):
             send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
             #await(cid in results)
             #output('received result', cid, results[cid])
-            time.sleep(2.5)
+            time.sleep(client_delay_between_request)
             cid += 1
         #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
         #output('terminating')
@@ -65,10 +66,20 @@ def generateKeysForValidators(validator_ids):
 
 def main():
 
-    n_validators = 4
-    n_clients = 1
-    validator_ids = ['v1', 'v2', 'v3', 'v4']
-    client_ids = ['c1']
+    with open('config.json',encoding='utf-8-sig') as f:
+        config = json.load(f)
+    print(config)
+    n_validators = config["number_of_validators"]
+    n_clients = config["number_of_clients"]
+    validator_ids=[]
+    client_ids = []
+    client_NOPS=config["workload_for_client"]["number_of_request"]
+    client_delay_between_request=config["workload_for_client"]["delay_between_request"]
+
+    for i in range(1,n_validators+1):
+        validator_ids.append('v'+str(i))
+    for i in range(1,n_clients+1):
+        client_ids.append('c'+str(i))
 
     validators = list(new(validator.Validator, num= n_validators))
     clients = list(new(Client, num= n_clients))
@@ -83,10 +94,21 @@ def main():
        setup(validators[i], args=(validator_ids[i], validator_dict, n_validators,list_signature_dict[i]))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], client_ids[i], validators, NOPS))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS,client_delay_between_request))
 
     start(validators)
     start(clients)
     await(each(c in clients, has=received(('done',), from_=c)))
     output('All clients done.')
-#    send(('done',), to= (acceptors|replicas|leaders))
+
+
+
+    #await(False)
+
+
+
+
+
+
+
+
