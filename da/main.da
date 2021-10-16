@@ -2,21 +2,90 @@ import sys
 import time
 import random
 import validator as validator
-import client as client
+#import client as client
 from collections import OrderedDict
 NOPS = 6
 def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
 operations = {i: operation(i) for i in range(NOPS)}
 
+from nacl.signing import SigningKey
+import json
+import io
+
+class Client(process):
+
+    def setup(idx, client_id, validators, NOPS, client_delay_between_request):
+        self.idx = idx
+        self.client_id = client_id
+        self.cid = 0           # command id
+        self.results = dict()  # map of command id to result of command
+        self.count = dict()    # map of command id to number of responses
+
+    def run():
+        for i in range(NOPS):
+            cmd = str(self.client_id) + " - " + str(i)
+            send(('CLIENT_REQUEST', (self, cmd, cid)), to=validators)
+            #send(('RESULT_RESPONSE', ("SUCCESS")), to=self)
+            time.sleep(client_delay_between_request)
+            #time.sleep(2)
+            cid += 1
+        #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
+        #output('terminating')
+        #send(('done',), to=parent())
+        await(False)
+
+    def receive(msg=('RESULT_RESPONSE', res)):
+        cmd, status = res
+        if cmd not in results:
+            output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
+            results[cmd] = status
+        elif results[cmd] != status:
+            error('different result', cid, status, 'than', results[cid])
+        count[cid] = 1 if cid not in count else count[cid] + 1
+
+
+def generateKeysForValidators(validator_ids):
+    #signature_dict{
+    #   "validators_public_key":{"specific_validator_id":validator_public_key}
+    #   "private_key":value
+    #   }
+
+    #first generate signing_key for all the validators
+    private_signing_keys=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
+    public_signing_keys={}
+    for i in range(0,len(private_signing_keys)):
+        public_signing_keys[validator_ids[i]]=private_signing_keys[i].verify_key.encode()
+
+    #lets create signature_dict for all the validators
+    list_signature_dict=[]
+    for i in range(0,len(validator_ids)):
+        signature_dict={}
+        signature_dict["validators_public_key"]=public_signing_keys
+        signature_dict["private_key"]=private_signing_keys[i]
+        list_signature_dict.append(signature_dict)
+
+    return list_signature_dict
+
 def main():
 
-    n_validators = 4
-    n_clients = 1
-    validator_ids = ['v1', 'v2', 'v3', 'v4']
-    client_ids = ['c1']
+    with open('config.json',encoding='utf-8-sig') as f:
+        config = json.load(f)
+    print(config)
+    n_validators = config["number_of_validators"]
+    n_clients = config["number_of_clients"]
+    validator_ids=[]
+    client_ids = []
+    client_NOPS=config["workload_for_client"]["number_of_request"]
+    client_delay_between_request=config["workload_for_client"]["delay_between_request"]
+
+    for i in range(1,n_validators+1):
+        validator_ids.append('v'+str(i))
+    for i in range(1,n_clients+1):
+        client_ids.append('c'+str(i))
 
     validators = list(new(validator.Validator, num= n_validators))
-    clients = list(new(client.Client, num= n_clients))
+    clients = list(new(Client, num= n_clients))
+    list_signature_dict=generateKeysForValidators(validator_ids)
 
     validator_dict = OrderedDict()
     for i in range(0, len(validator_ids)):
@@ -24,13 +93,14 @@ def main():
         validator_dict[validator_ids[i]]=id
 
     for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, clients))
+       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, list_signature_dict[i], clients))
 
     for i in range(n_clients):
-       setup(clients[i], args=(clients[i], client_ids[i], validators, NOPS))
+       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS,client_delay_between_request))
 
     start(validators)
     start(clients)
     await(each(c in clients, has=received(('done',), from_=c)))
     output('All clients done.')
-#    send(('done',), to= (acceptors|replicas|leaders))
+
+    #await(False)

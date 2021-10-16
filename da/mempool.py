@@ -11,6 +11,8 @@ class Mempool:
         self.validator_info=validator_info
         self.transactions = defaultdict() # this will be filled when a validator is initialized via runner
 
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
 
     def get_transactions(self,):
         list_of_pending_transactions=[]

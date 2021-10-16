@@ -2,6 +2,7 @@
 
 from Models.block import Block
 from Models.qc import QC
+from nacl.signing import VerifyKey
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
 #       'Main' : {main variables}
@@ -17,6 +18,8 @@ class Block_tree:
         self.high_qc = high_qc#None
         self.high_commit_qc = high_commit_qc#None
 
+    def setValidator_info(self,validator_info):
+        self.validator_info = validator_info
     def getMaxRound(self, qc, high_commit_qc,update_high_commit_qc):
 
         if qc is not None:
@@ -35,6 +38,12 @@ class Block_tree:
         #     return qc if (qc.vote_info.round> high_commit_qc.vote_info.round) else high_commit_qc
 
     def process_qc(self,qc):
+
+        #verify the author
+        if qc is not None:
+            signatures_list = qc.signatures
+            self.verifySignature(qc.author,qc.author_signature)
+
 
 
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
@@ -67,6 +76,7 @@ class Block_tree:
 
     def process_vote(self,v):
 
+
         self.process_qc(v.high_commit_qc)
 
         vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
@@ -80,8 +90,10 @@ class Block_tree:
 
             signatures_list=list(self.pending_votes[vote_idx])
 
-            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
-            print("QC BAN GAYA ", self.validator_info["Main"]["u"])
+            author_sign=self.validator_info["Main"]["signature_dict"]["private_key"].sign(self.generateSignRecur(signatures_list).encode('utf-8'))
+
+            new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],author_sign) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
+           # print("QC ban gya",self.validator_info["Main"]["u"])
             # if self.high_qc is not None:
             #     self.high_commit_qc=self.high_qc
             # self.high_qc=new_qc
@@ -89,6 +101,12 @@ class Block_tree:
        # print("waah ji waah qc nhi bana kynki consensus nhi mila",self.high_qc)
         return None
 
+    def generateSignRecur(self,signatures_list):
+        hash_of_all_sign=''
+        for i in range(0,len(signatures_list)):
+            hash_of_all_sign=str(hash(str(hash(signatures_list[i]))+hash_of_all_sign))
+
+        return hash_of_all_sign
     '''
     - What will be the initial value for qc and high_qc(vote_info, etc)
     - Author will be the current leader right?
@@ -145,3 +163,14 @@ class Block_tree:
         for ledger_id in list_of_ledger_ids:
             if ledger_id in self.validator_info["Ledger"].pending_ledger_states:
                 del self.validator_info["Ledger"].pending_ledger_states[ledger_id]
+
+    def verifySignature(self,sender, msg):
+        # check sign here
+        verify_key = VerifyKey(self.validator_info["Main"]["signature_dict"]["validators_public_key"][sender])
+        try:
+            verify_key.verify(msg)
+        except:
+            print("Signature was forged or corrupt in vote msg sent by", sender)
+            # think what has to be done (wait timeout
+            return
+        #print("OKKKKK Signature  in vote msg sent by", sender)
