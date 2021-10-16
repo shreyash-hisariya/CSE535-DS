@@ -1,0 +1,39 @@
+import sys
+import time
+import random
+import validator as validator
+from collections import OrderedDict
+
+class Client(process):
+    def setup(idx, client_id, validators, NOPS):
+        self.idx = idx
+        self.client_id = client_id
+        self.cid = 0           # command id
+        self.results = dict()  # map of command id to result of command
+        self.count = dict()    # map of command id to number of responses
+
+    def run():
+        for i in range(NOPS):
+            cmd = str(self.client_id) + " - " + str(i)
+            send(('CLIENT_REQUEST', (self, cmd, cid)), to=validators)
+            #send(('RESULT_RESPONSE', ("SUCCESS")), to=self)
+            time.sleep(2)
+            #if i > 2:
+            #    if await(len(results) > 0):
+            #        output('received result', cmd, results)
+
+            cid += 1
+        #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
+        #output('terminating')
+        #send(('done',), to=parent())
+        await(False)
+
+    def receive(msg=('RESULT_RESPONSE', res)):
+        cmd, status = res
+        if cmd not in results:
+            output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
+            results[cmd] = status
+        elif results[cmd] != status:
+            error('different result', cid, status, 'than', results[cid])
+        count[cid] = 1 if cid not in count else count[cid] + 1
+

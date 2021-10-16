@@ -54,6 +54,8 @@ class Safety:
         if qc_round < self.highest_vote_round or round <= max(self.highest_vote_round - 1, qc_round):
             return False
         #print('kashfklashfklhasklfhklashfklashfklahs')
+        if tc is None:
+            return self.consecutive(round, qc_round)
         return self.consecutive(round, qc_round) or self.consecutive(round, tc.round) # handle tc none
 
     def commit_state_id_candidate(self, block_round, qc):

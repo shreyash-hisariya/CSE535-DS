@@ -2,18 +2,19 @@ import sys
 import time
 import random
 import validator as validator
+#import client as client
 from collections import OrderedDict
+NOPS = 6
+def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
+operations = {i: operation(i) for i in range(NOPS)}
+
 from nacl.signing import SigningKey
 import json
 import io
 
-NOPS = 10
-def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
-operations = {i: operation(i) for i in range(NOPS)}
-
-
 class Client(process):
-    def setup(idx, client_id, validators, NOPS,client_delay_between_request):
+
+    def setup(idx, client_id, validators, NOPS, client_delay_between_request):
         self.idx = idx
         self.client_id = client_id
         self.cid = 0           # command id
@@ -23,23 +24,24 @@ class Client(process):
     def run():
         for i in range(NOPS):
             cmd = str(self.client_id) + " - " + str(i)
-            print("MAIN CMDDD ",cmd)
-            send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
-            #await(cid in results)
-            #output('received result', cid, results[cid])
+            send(('CLIENT_REQUEST', (self, cmd, cid)), to=validators)
+            #send(('RESULT_RESPONSE', ("SUCCESS")), to=self)
             time.sleep(client_delay_between_request)
+            #time.sleep(2)
             cid += 1
         #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
         #output('terminating')
         #send(('done',), to=parent())
+        await(False)
 
-    def receive(msg= ('RESPONSE', cmd, result)):
-        output('PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP', cmd, result)
-        #if cid not in results:
-        #    results[cid] = result
-        #elif results[cid] != result:
-        #    error('different result', cid, result, 'than', results[cid])
-        #count[cid] = 1 if cid not in count else count[cid] + 1
+    def receive(msg=('RESULT_RESPONSE', res)):
+        cmd, status = res
+        if cmd not in results:
+            output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
+            results[cmd] = status
+        elif results[cmd] != status:
+            error('different result', cid, status, 'than', results[cid])
+        count[cid] = 1 if cid not in count else count[cid] + 1
 
 
 def generateKeysForValidators(validator_ids):
@@ -91,7 +93,7 @@ def main():
         validator_dict[validator_ids[i]]=id
 
     for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators,list_signature_dict[i]))
+       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, list_signature_dict[i], clients))
 
     for i in range(n_clients):
        setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS,client_delay_between_request))
@@ -101,14 +103,4 @@ def main():
     await(each(c in clients, has=received(('done',), from_=c)))
     output('All clients done.')
 
-
-
     #await(False)
-
-
-
-
-
-
-
-

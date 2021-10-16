@@ -5,7 +5,7 @@
   "seed_for_random_numbers": 1,
   "value_for_delta_for_timeout": 2,
   "workload_for_client": {
-    "number_of_request": 10,
-    "delay_between_request": 2.5
+    "number_of_request": 6,
+    "delay_between_request": 2
   }
 }
