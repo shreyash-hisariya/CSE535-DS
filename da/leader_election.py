@@ -24,7 +24,7 @@ class Leader_election:
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
             current_block = self.validator_info["Ledger"].committed_block(current_qc.vote_info.parent_id)
-
+            #print('DHDKAHDKHAKDHAKDHKADHKADHKAHDKAH', current_block)
             block_author = current_block.author
 
             if i < self.window_size:
@@ -47,8 +47,7 @@ class Leader_election:
 
     def update_leaders(self, qc):
 
-
-
+        #return
         if qc is None:
             # print("return from update_leaders as qc is None")
             return
@@ -60,7 +59,6 @@ class Leader_election:
         # shreyas: every replica should be in some consesus
 
         if extended_round + 1 == qc_round and qc_round + 1 == current_round:
-            print("00000000 ****************")
 
             candidate=self.elect_reputation_leader(qc)
             if current_round + 1 in self.reputation_leaders:
@@ -69,14 +67,14 @@ class Leader_election:
             else:
                 if candidate != -1:
                     self.reputation_leaders[current_round + 1]=[self.elect_reputation_leader(qc)]
-            print("99999999 ****************")
+
             ###Saurabh: self.reputation_leaders[current_round + 1] needs to be list or a single value
             ###Saurabh: should we broadcast this to everyone so that there is a consensus for the next leader
 
     def get_leader(self, curr_round):
         ###Saurabh: write algo for selection of self.reputation_leader : taking the first element
-        if curr_round in self.reputation_leaders:
-            return self.reputation_leaders[curr_round].keys()[0]
+        # if curr_round in self.reputation_leaders:
+        #     return self.reputation_leaders[curr_round].keys()[0]
 
         return self.round_robin(curr_round)
 

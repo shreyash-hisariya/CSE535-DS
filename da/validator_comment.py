@@ -180,3 +180,13 @@ if self.u=="v4" or self.u == 'v1'  or self.u == 'v2':
                     send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
                     self.run_done=True
                     break
+
+
+            def receive(msg=('RESULT_RESPONSE', cmd, result)):
+                output('PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP', cmd, result)
+                # if cmd not in results:
+                #    results[cmd] = result
+                # elif results[cid] != result:
+                #    error('different result', cid, result, 'than', results[cid])
+                # count[cid] = 1 if cid not in count else count[cid] + 1
+

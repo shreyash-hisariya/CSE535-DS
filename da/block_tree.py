@@ -69,9 +69,6 @@ class Block_tree:
 
         self.process_qc(v.high_commit_qc)
 
-        if v.high_commit_qc is not None:
-            print("v.high_commit_qc.vote_info.round",v.high_commit_qc.vote_info.round)
-
         vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
 
         if vote_idx in self.pending_votes:
@@ -79,16 +76,15 @@ class Block_tree:
         else:
             self.pending_votes[vote_idx] = [v.signature]
 
-        if len(self.pending_votes[vote_idx]) == 4: #(2*f)+1: # need to set f from config.json
+        if len(self.pending_votes[vote_idx]) >= 3: #(2*f)+1: # need to set f from config.json
 
             signatures_list=list(self.pending_votes[vote_idx])
 
             new_qc = QC(v.vote_info,v.ledger_commit_info,signatures_list ,self.validator_info["Main"]["u"],str(self.validator_info["Main"]["u"])) # str(self.validator_info["Main"]["u"] )=> author will sign list of signature
-           # print("QC ban gya",self.validator_info["Main"]["u"])
+            print("QC BAN GAYA ", self.validator_info["Main"]["u"])
             # if self.high_qc is not None:
             #     self.high_commit_qc=self.high_qc
             # self.high_qc=new_qc
-            print("QC ban gya")
             return new_qc
        # print("waah ji waah qc nhi bana kynki consensus nhi mila",self.high_qc)
         return None

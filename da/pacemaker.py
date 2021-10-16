@@ -41,13 +41,9 @@ class Pacemaker:
 
     # To Do timeout
     def process_remote_timeout(self, tmo):
-        # print("areyyyyyyyyyy",self.validator_info["Main"]["u"])
         tmo_info = tmo.tmo_info
         if tmo_info.block_round < self.current_round:
             return None
-
-        # if tmp_info.sender not in pending_timeouts[tmo_info.round]:
-        #     pending_timeouts[tmo_info.round].add(tmo_info)
 
         if tmo_info.block_round in self.pending_timeouts_senders:
 
@@ -75,9 +71,12 @@ class Pacemaker:
         # if(tmo_info.sender)
 
     def advance_round_tc(self, tc):
+
         if tc is None or tc.block_round < self.current_round:
             return False
+
         self.last_round_tc = tc
+
         ###Saurabh: tc.round + 1 or current_round+1
         self.start_timer(tc.block_round + 1)
         return True
@@ -87,6 +86,7 @@ class Pacemaker:
         if qc is None or qc.vote_info.round < self.current_round:
             # print("In advance_round_qc: return")
             return False
+
 
         # if a validator is lagging, then the following code advances it to the current round
         self.last_round_tc = None
