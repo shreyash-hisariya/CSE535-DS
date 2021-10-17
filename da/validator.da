@@ -94,7 +94,6 @@ class Validator(process):
     def receive(msg=('CLIENT_REQUEST', request)):
 
         client, cmd, signature = request
-        output(' NEW REQUEST - ', client, ' CMD - ', cmd)
         if self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)== False:
             return
 
