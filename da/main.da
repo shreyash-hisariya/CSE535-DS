@@ -1,6 +1,8 @@
 import sys
 import time
 import random
+import os
+import signal
 import validator as validator
 #import client as client
 from collections import OrderedDict
@@ -26,7 +28,7 @@ class Client(process):
         for i in range(NOPS):
             cmd = str(self.client_id) + " - " + str(i)
             signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
-            print("signature client",signature)
+            #print("signature client",signature)
             send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
             time.sleep(client_delay_between_request)
             cid += 1
@@ -39,9 +41,9 @@ class Client(process):
             for c in self.count.keys():
                 if self.count[c] == 0:
                     #output(' SENDING AGAIN. SENDING AGAIN - ', c)
-                    print("HELLLLL")
+                    #print("HELLLLL")
                     signature=self._signature_dict["private_key"].sign(str(c).encode('utf-8'))
-                    print("signature client",signature)
+                    #print("signature client",signature)
                     send(('CLIENT_REQUEST', (self.client_id, c ,signature)), to=validators)
                     time.sleep(client_delay_between_request)
 
@@ -49,7 +51,7 @@ class Client(process):
         await(len(self.results) == (NOPS))
         output('terminating client - ', self.idx)
         send(('done',), to=parent())
-
+        #await(received(('done',)))
 
     def receive(msg=('RESULT_RESPONSE', res)):
 
@@ -150,9 +152,14 @@ class Test(process):
         start(validators)
         start(clients)
         await(each(c in clients, has=received(('done',), from_=c)))
-        output('All clients done.')
-        #exit()
-        #await(False)
+        output(' SENDING DONE TO CLIENTS AND VALIDATORS')
+        for c in clients:
+            send(('done',), to= (c))
+
+        for v in validators:
+            send(('done',), to= (v))
+
+        send(('done',), to=parent())
 
 def main():
 
@@ -163,5 +170,9 @@ def main():
         t=new(Test)
         setup(t, (config[i],))
         start(t)
-        time.sleep(20)
+        await(received(('done',), from_=t))
+        send(('done',), to= (t))
+
+    output('COMPLETED')
+
 
