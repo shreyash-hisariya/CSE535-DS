@@ -1,5 +1,5 @@
 ﻿{
-  "number_of_clients": 2,
+  "number_of_clients": 1,
   "number_of_validators": 4,
   "number_of_faulty_validators": 1,
   "seed_for_random_numbers": 1,
