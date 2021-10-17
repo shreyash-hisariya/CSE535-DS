@@ -71,8 +71,8 @@ class Ledger:
         #
 
     def clear_file(self):
-        f = open(self.persistent_ledger_file,"w")
-        msg = ""
+        f = open(self.persistent_ledger_file,"a")
+        msg = "\n \n New test Case\n \n"
         f.write(msg)
         f.close()
     def writeToFile(self,key,value):
