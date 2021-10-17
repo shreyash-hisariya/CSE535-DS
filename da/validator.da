@@ -17,15 +17,19 @@ from Models.proposal_message import ProposalMessage
 class Validator(process):
 
 
-    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict):
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker):
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
         self._n_validators = n_validators
         self.client_dict = client_dict
+        self.client_NOPS=client_NOPS
+        self.faulty_validators=faulty_validators
+        self.delta_for_pacemaker=delta_for_pacemaker
 
         self._signature_dict=combined_public_signature_dict
         self._signature_dict["private_key"]=private_key
+        self._timeoutWorkloadInfo=timeoutWorkloadInfo
 
         self.round = 0
         self.leader = 0
@@ -38,16 +42,16 @@ class Validator(process):
         self.client_results = {}
 
         #print("VALIDATOR:",self.u," My keys: ",self._signature_dict)
-        main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
+        main_dict = {'faulty_validators':self.faulty_validators,'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
 
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
 
         self.mempool = Mempool()
         #self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
         self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,set())
-        self.block_tree = Block_tree({},{},None,None)
+        self.block_tree = Block_tree({},{},None,None,self.faulty_validators)
         self.safety = Safety(self._signature_dict['private_key'],self._signature_dict['validators_public_key'],-1,-1,-1)
-        self.pacemaker = Pacemaker(0,None,{},{})
+        self.pacemaker = Pacemaker(0,None,{},{},self.faulty_validators,self.delta_for_pacemaker)
         self.leader_election = Leader_election()
 
         validator_info={}
@@ -89,7 +93,7 @@ class Validator(process):
                 send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
                 #break
 
-        await(self.pacemaker.current_round > 12)
+        await(self.pacemaker.current_round > (len(self.client_dict.keys())*self.client_NOPS))
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
@@ -116,7 +120,9 @@ class Validator(process):
         #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
         #    time.sleep(3)
         #    return
-
+        if self._timeoutWorkloadInfo is not None and self.u in self._timeoutWorkloadInfo["validators_getting_timeouts"] and  self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] and proposal_msg.last_round_tc is None:
+            time.sleep(self._timeoutWorkloadInfo["timeout_duration"])
+            return
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
 
@@ -128,8 +134,25 @@ class Validator(process):
     def receive(msg=('TIMEOUT_MESSAGE',m)):
 
         validator_id, timeout_msg = m
-        if  self.pacemaker.current_round==1:
+        #if self.pacemaker.current_round==1:
+        if  self._timeoutWorkloadInfo is not None and self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] :
             output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
+
+
+            if timeout_msg is not None and timeout_msg.tmo_info is not None and timeout_msg.tmo_info.high_qc is None:
+                high_qc_sign = 'None'
+                if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
+                    return
+            elif timeout_msg is not None and timeout_msg.tmo_info is not None and timeout_msg.tmo_info.high_qc is not None:
+                qc_round = timeout_msg.tmo_info.high_qc.vote_info.round
+                high_qc_sign = str(timeout_msg.tmo_info.high_qc.vote_info.round)
+                if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
+                    return
+
+
+
+
+
             self.process_timeout_msg(timeout_msg)
 
     def get_client(cmd):

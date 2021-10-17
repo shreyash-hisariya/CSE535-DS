@@ -11,12 +11,13 @@ from nacl.signing import VerifyKey
 
 class Block_tree:
 
-    def __init__(self,pending_block_tree,pending_votes,high_qc,high_commit_qc,validator_info=None):
+    def __init__(self,pending_block_tree,pending_votes,high_qc,high_commit_qc,faulty_validators,validator_info=None):
         self.validator_info=validator_info
         self.pending_block_tree =pending_block_tree#  []  # may need to verify => change this to dict key:blockid value block
         self.pending_votes = pending_votes#{}  # dictionary where key is hash(v.ledger_commit_info) and value is set of signatures
         self.high_qc = high_qc#None
         self.high_commit_qc = high_commit_qc#None
+        self.faulty_validators=faulty_validators
 
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
@@ -88,7 +89,7 @@ class Block_tree:
         else:
             self.pending_votes[vote_idx] = [v.signature]
 
-        if len(self.pending_votes[vote_idx]) >= 3: #(2*f)+1: # need to set f from config.json
+        if len(self.pending_votes[vote_idx]) >= (2 * self.faulty_validators) + 1: #3 (2*f)+1: # need to set f from config.json
 
             signatures_list=list(self.pending_votes[vote_idx])
 

@@ -21,11 +21,12 @@ class Client(process):
         self._signature_dict=combined_public_signature_dict
         self._signature_dict["private_key"]=private_key
         self.client_delay_between_request=client_delay_between_request
+        self.NOPS=NOPS
 
 
     def run():
         cmds = []
-        for i in range(NOPS):
+        for i in range(self.NOPS):
             cmd = str(self.client_id) + " - " + str(i)
             signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
             #print("signature client",signature)
@@ -36,7 +37,7 @@ class Client(process):
             self.count[cmd] = 0
         #await(each(cmd in cmds, has= self.count[cmd] == len(validators)))
         cnt = 0
-        while(len(self.results) != NOPS and cnt < 3):
+        while(len(self.results) != self.NOPS and cnt < 3):
             cnt = cnt + 1
             for c in self.count.keys():
                 if self.count[c] == 0:
@@ -48,7 +49,7 @@ class Client(process):
                     time.sleep(client_delay_between_request)
 
         output(' COMING OUT OF WHILE - ', len(self.results))
-        await(len(self.results) == (NOPS))
+        await(len(self.results) == (self.NOPS))
         output('terminating client - ', self.idx)
         send(('done',), to=parent())
         #await(received(('done',)))
@@ -123,7 +124,9 @@ class Test(process):
         client_ids = []
         client_NOPS=config["workload_for_client"]["number_of_request"]
         client_delay_between_request=config["workload_for_client"]["delay_between_request"]
-
+        workload_for_validator=config["workload_for_validator"]
+        faulty_validators=config["number_of_faulty_validators"]
+        delta_for_pacemaker=config["delta_for_pacemaker"]
         for i in range(1,n_validators+1):
             validator_ids.append('v'+str(i))
         for i in range(1,n_clients+1):
@@ -143,8 +146,22 @@ class Test(process):
             id = clients[i]
             client_dict[client_ids[i]]=id
 
+        validators_getting_timeouts=random.sample(validator_ids,workload_for_validator["number_of_validators_getting_timed_out"])
+        timeouts_rounds=[workload_for_validator["round_getting_timeout"]]
+        timeout_duration=workload_for_validator["timeout_duration"]
+
+        timeoutWorkloadInfo={
+        "validators_getting_timeouts":validators_getting_timeouts,
+        "timeouts_rounds_list":timeouts_rounds,
+        "timeout_duration":timeout_duration
+        }
+
+        print("self.validators_getting_timeouts ",validators_getting_timeouts)
+        print("self.timeout_duration ",timeouts_rounds)
+        print("self.timeout_duration ",timeout_duration)
+
         for i in range(n_validators):
-           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict))
+           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker))
 
         for i in range(n_clients):
            setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))

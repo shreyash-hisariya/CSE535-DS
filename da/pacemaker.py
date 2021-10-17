@@ -8,18 +8,20 @@ from Models.timeout_certificate import TimeoutCertificate
 
 
 class Pacemaker:
-    def __init__(self, current_round,last_round_tc,pending_timeouts,pending_timeouts_senders,validator_info=None):
+    def __init__(self, current_round,last_round_tc,pending_timeouts,pending_timeouts_senders,faulty_validators,delta_for_pacemaker,validator_info=None):
         self.validator_info = validator_info
         self.current_round = current_round#0
         self.last_round_tc = last_round_tc#None
         self.pending_timeouts = pending_timeouts#{}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
         self.pending_timeouts_senders = pending_timeouts_senders#{}  # extra dictionary of set (key:round,value:set of tmo_info.senders  getting timed_out) : may have to verify
+        self.faulty_validators=faulty_validators
+        self.delta_for_pacemaker=delta_for_pacemaker
 
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
     def get_round_timer(self, r):
         # distAlgo: set timer for a round expiry
-        return 2
+        return self.delta_for_pacemaker*4
 
     def start_timer(self, new_round):
         self.stop_timer(self.current_round)
@@ -55,12 +57,13 @@ class Pacemaker:
         else:
             self.pending_timeouts[tmo_info.block_round] = {tmo_info}
             self.pending_timeouts_senders[tmo_info.block_round] = {tmo_info.sender}
-        f=1
-        if len(self.pending_timeouts_senders[tmo_info.block_round]) == f + 1:
+
+
+        if len(self.pending_timeouts_senders[tmo_info.block_round]) == self.faulty_validators + 1:
             self.stop_timer(self.current_round)
             self.local_timeout_round()
 
-        if len(self.pending_timeouts_senders[tmo_info.block_round]) == (2 * f) + 1:
+        if len(self.pending_timeouts_senders[tmo_info.block_round]) == (2 * self.faulty_validators) + 1:
 
             high_qc_rounds_vector = [tmo_info.high_qc.vote_info.round for tmo_info in
                                      self.pending_timeouts[tmo_info.block_round] if tmo_info.high_qc is not None  ]
