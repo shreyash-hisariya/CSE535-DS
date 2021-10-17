@@ -13,8 +13,6 @@ import json
 import io
 
 class Client(process):
-
-
     def setup(idx, client_id, validators, NOPS, client_delay_between_request,combined_public_signature_dict,private_key):
         self.idx = idx
         self.client_id = client_id
@@ -67,77 +65,94 @@ class Client(process):
             print("Packet  content was forged or corrupt sent by",sender)
 
 
-def generateKeys(validator_ids,client_ids):
 
 
+class Test(process):
 
-    #signature_dict{
-    #   "validators_public_key":{"specific_validator_id":validator_public_key}
-    #   "clients_public_key":{"specific_client_id":client_public_key}
-    #   }
+    def setup(config):
+        self.config=config
 
+    def generateKeys(validator_ids,client_ids):
 
-    #first generate signing_key for all the validators
-    private_keys_validators=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
-    private_keys_clients=[SigningKey.generate() for i in range(0,len(client_ids)) ]
-
-
-    public_signing_keys_validators={}
-    for i in range(0,len(private_keys_validators)):
-        public_signing_keys_validators[validator_ids[i]]=private_keys_validators[i].verify_key.encode()
-
-    public_signing_keys_clients={}
-    for i in range(0,len(private_keys_clients)):
-        public_signing_keys_clients[client_ids[i]]=private_keys_clients[i].verify_key.encode()
-
-    #lets create signature_dict for all the validators
-    combined_public_signature_dict={}
-    combined_public_signature_dict["validators_public_key"]=public_signing_keys_validators
-    combined_public_signature_dict["clients_public_key"]=public_signing_keys_clients
+        #signature_dict{
+        #   "validators_public_key":{"specific_validator_id":validator_public_key}
+        #   "clients_public_key":{"specific_client_id":client_public_key}
+        #   }
 
 
-    return combined_public_signature_dict,private_keys_validators,private_keys_clients
+        #first generate signing_key for all the validators
+        private_keys_validators=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
+        private_keys_clients=[SigningKey.generate() for i in range(0,len(client_ids)) ]
+
+
+        public_signing_keys_validators={}
+        for i in range(0,len(private_keys_validators)):
+            public_signing_keys_validators[validator_ids[i]]=private_keys_validators[i].verify_key.encode()
+
+        public_signing_keys_clients={}
+        for i in range(0,len(private_keys_clients)):
+            public_signing_keys_clients[client_ids[i]]=private_keys_clients[i].verify_key.encode()
+
+        #lets create signature_dict for all the validators
+        combined_public_signature_dict={}
+        combined_public_signature_dict["validators_public_key"]=public_signing_keys_validators
+        combined_public_signature_dict["clients_public_key"]=public_signing_keys_clients
+        return combined_public_signature_dict,private_keys_validators,private_keys_clients
+
+
+    def run():
+        config=self.config
+        n_validators = config["number_of_validators"]
+        n_clients = config["number_of_clients"]
+        validator_ids=[]
+        client_ids = []
+        client_NOPS=config["workload_for_client"]["number_of_request"]
+        client_delay_between_request=config["workload_for_client"]["delay_between_request"]
+
+        for i in range(1,n_validators+1):
+            validator_ids.append('v'+str(i))
+        for i in range(1,n_clients+1):
+            client_ids.append('c'+str(i))
+
+        validators = list(new(validator.Validator, num= n_validators))
+        clients = list(new(Client, num= n_clients))
+        combined_public_signature_dict,private_keys_validators,private_keys_clients=generateKeys(validator_ids,client_ids)
+
+        validator_dict = OrderedDict()
+        for i in range(0, len(validator_ids)):
+            id = validators[i]
+            validator_dict[validator_ids[i]]=id
+
+        client_dict = OrderedDict()
+        for i in range(0, len(client_ids)):
+            id = clients[i]
+            client_dict[client_ids[i]]=id
+
+        for i in range(n_validators):
+           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict))
+
+        for i in range(n_clients):
+           setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))
+
+        start(validators)
+        start(clients)
+        await(each(c in clients, has=received(('done',), from_=c)))
+        output('All clients done.')
+
+        #await(False)
 
 def main():
 
     with open('config.json',encoding='utf-8-sig') as f:
         config = json.load(f)
 
-    n_validators = config["number_of_validators"]
-    n_clients = config["number_of_clients"]
-    validator_ids=[]
-    client_ids = []
-    client_NOPS=config["workload_for_client"]["number_of_request"]
-    client_delay_between_request=config["workload_for_client"]["delay_between_request"]
+    for i in range(len(config)):
+        t=new(Test)
+        setup(t, (config[0],))
+        start(t)
+        time.sleep(20)
 
-    for i in range(1,n_validators+1):
-        validator_ids.append('v'+str(i))
-    for i in range(1,n_clients+1):
-        client_ids.append('c'+str(i))
 
-    validators = list(new(validator.Validator, num= n_validators))
-    clients = list(new(Client, num= n_clients))
-    combined_public_signature_dict,private_keys_validators,private_keys_clients=generateKeys(validator_ids,client_ids)
 
-    validator_dict = OrderedDict()
-    for i in range(0, len(validator_ids)):
-        id = validators[i]
-        validator_dict[validator_ids[i]]=id
 
-    client_dict = OrderedDict()
-    for i in range(0, len(client_ids)):
-        id = clients[i]
-        client_dict[client_ids[i]]=id
 
-    for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict))
-
-    for i in range(n_clients):
-       setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))
-
-    start(validators)
-    start(clients)
-    await(each(c in clients, has=received(('done',), from_=c)))
-    output('All clients done.')
-
-    #await(False)

@@ -15,6 +15,7 @@ class Ledger:
         # key is block_id and value is corresponding ledger_state_id.
         self.blockid_ledger_map = blockid_ledger_map#OrderedDict()
         self.persistent_ledger_file=persistent_ledger_file
+        self.clear_file()
         #self.committed_block_map=committed_block_map#{} key blockId, value=block
 
     def setValidator_info(self,validator_info):
@@ -69,6 +70,11 @@ class Ledger:
         #     return self.persistent_ledger_states[self.blockid_ledger_map[block_id]][0]
         #
 
+    def clear_file(self):
+        f = open(self.persistent_ledger_file,"w")
+        msg = ""
+        f.write(msg)
+        f.close()
     def writeToFile(self,key,value):
 
         f = open(self.persistent_ledger_file, "a")
