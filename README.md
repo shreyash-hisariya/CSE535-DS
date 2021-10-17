@@ -5,7 +5,8 @@ Distributed System DiemBFT
 - Python 2.7.16 (CPython)
 - MacOS Big Sur 11.2
 - Type of Host : Laptop
-- DistAlgo 
+- DistAlgo 1.1.0b15
+- PyNaCl 1.4.0
 
 # Workload Generation
 - Workload configurations are defined in the file : /da/config.json
