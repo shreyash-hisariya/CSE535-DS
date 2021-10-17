@@ -13,11 +13,27 @@ from pacemaker import Pacemaker
 from mempool import Mempool
 from leader_election import Leader_election
 from Models.proposal_message import ProposalMessage
+from time import gmtime, strftime
+
+import enum
+
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
+
+
+
+
+
 
 class Validator(process):
 
 
-    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker):
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker,comment_for_test_case):
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
@@ -30,6 +46,7 @@ class Validator(process):
         self._signature_dict=combined_public_signature_dict
         self._signature_dict["private_key"]=private_key
         self._timeoutWorkloadInfo=timeoutWorkloadInfo
+        self.comment_for_test_case=comment_for_test_case
 
         self.round = 0
         self.leader = 0
@@ -40,10 +57,9 @@ class Validator(process):
         self.b = None
         self.results = {}
         self.client_results = {}
-
+        self.logger_file= str(self.u)+'_'+str("Logger.txt")
         #print("VALIDATOR:",self.u," My keys: ",self._signature_dict)
-        main_dict = {'faulty_validators':self.faulty_validators,'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
-
+        main_dict = {'comment_for_test_case':self.comment_for_test_case,'logger_file':self.logger_file,'faulty_validators':self.faulty_validators,'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
 
         self.mempool = Mempool()
@@ -72,6 +88,7 @@ class Validator(process):
         self.leader_election.setValidator_info(validator_info);
         self.run_done = False
 
+        self.initialiseLogger()
     def run():
 
         while not self.run_done:
@@ -81,6 +98,9 @@ class Validator(process):
 
                 for cmd in self.client_results.keys():
                     signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+
+                    self.logToFile(str("Validator: "+self.u + " Sending Result Response:SUCCESS directly as it is cached already to Client: "+cmd.replace(" ", "").split("-")[0]),LoggingLevel.INFO)
+
                     send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
                 self.client_results.clear()
                 self.run_done=False
@@ -99,19 +119,23 @@ class Validator(process):
     def receive(msg=('CLIENT_REQUEST', request)):
 
         client, cmd, signature = request
+
         if self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)== False:
+            self.logToFile(str("Validator: "+self.u + " Client " +client+ " Authentication Failed" ),LoggingLevel.INFO)
             return
+        else:
+            self.logToFile(str("Validator: "+self.u + " Client " +client+ " Authentication Successful" ),LoggingLevel.INFO)
+
 
         if cmd in self.results.keys():
             curr_client = self.get_client(cmd)
-            #output(' RESULT IN CACHE FOR COMMAND - ', cmd)
             signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
-            send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
+            self.logToFile(str("Validator: "+self.u + " Sending Result Response:SUCCESS directly as it is cached already to Client: "+client),LoggingLevel.INFO)
 
+            send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
             return
 
         self.mempool.add_transaction(cmd,"PENDING")
-        #print(self.u,cmd," LAST ROUND TC ",self.pacemaker.last_round_tc, ' LEADER - ', self.leader_election.get_leader(self.pacemaker.current_round))
         self.process_new_round_event(self.pacemaker.last_round_tc,client,cmd)
 
 
@@ -122,6 +146,7 @@ class Validator(process):
         #    return
         if self._timeoutWorkloadInfo is not None and self.u in self._timeoutWorkloadInfo["validators_getting_timeouts"] and  self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] and proposal_msg.last_round_tc is None:
             time.sleep(self._timeoutWorkloadInfo["timeout_duration"])
+            self.logToFile(str("Validator: "+self.u + " is going to sleep for : "+self._timeoutWorkloadInfo["timeout_duration"] + "secs"),LoggingLevel.INFO)
             return
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
@@ -138,7 +163,6 @@ class Validator(process):
         if  self._timeoutWorkloadInfo is not None and self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] :
             output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
 
-
             if timeout_msg is not None and timeout_msg.tmo_info is not None and timeout_msg.tmo_info.high_qc is None:
                 high_qc_sign = 'None'
                 if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
@@ -149,10 +173,6 @@ class Validator(process):
                 if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
                     return
 
-
-
-
-
             self.process_timeout_msg(timeout_msg)
 
     def get_client(cmd):
@@ -162,11 +182,13 @@ class Validator(process):
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
 
-        #check sign here
-
 
         if self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))== False:
+            self.logToFile(str("Validator: "+self.u + " received Buggy Vote Msg from the validator: "+validator_id),LoggingLevel.INFO)
             return
+        else:
+            self.logToFile(str("Validator: "+self.u + " received Proper Vote Msg from the validator: "+validator_id),LoggingLevel.INFO)
+
         self.qc = self.block_tree.process_vote(M)
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
@@ -181,6 +203,8 @@ class Validator(process):
 
         if self.tc is not None:
             output(' TC CREATED', self.u)
+            self.logToFile(str("Validator: "+self.u + " created TC message"),LoggingLevel.INFO)
+
             self.pacemaker.advance_round_tc(self.tc) # need to verify
             self.process_new_round_event(self.tc,None,None)
 
@@ -212,8 +236,11 @@ class Validator(process):
                     if k != self.u:
                         sender_list.append(v)
                         returnKeys.append(k)
+                self.logToFile(str("Validator: "+self.u + " sending Proposal message to other validators for empty new round"),LoggingLevel.INFO)
+
                 send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=sender_list)
             else:
+                self.logToFile(str("Validator: "+self.u + " sending Proposal message to every other validators"),LoggingLevel.INFO)
                 send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=list(self._validator_dict.values()))
 
 
@@ -234,11 +261,14 @@ class Validator(process):
     def process_proposal_msg(client, P,author_of_proposal): #Function def changed to include client
 
         if self.verifySignature(author_of_proposal,P.signature,str(P.block.id).encode('utf-8'))==False:
+            self.logToFile(str("Validator: "+self.u + " received buggy Proposal message from the validator: ",author_of_proposal),LoggingLevel.INFO)
             return
+
         if client is None or P.block.payload is None:
             #check qc sign
             signatures_list=P.block.qc.signatures
             if self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))==False:
+                self.logToFile(str("Validator: "+self.u + " received buggy qc message from the validator: ",author_of_proposal),LoggingLevel.INFO)
                 return
 
 
@@ -254,6 +284,8 @@ class Validator(process):
         self.leader = self.leader_election.get_leader(self.round) # need to verify
 
         if client is None or P.block.payload is None:
+            self.logToFile(str("Validator: "+self.u + " returning from empty round "),LoggingLevel.INFO)
+
             self.run_done = True
             return
 
@@ -270,8 +302,15 @@ class Validator(process):
             for t in P.block.payload:
                 self.mempool.update_transaction(t,"PROCESSING")
 
+            self.logToFile(str("Validator: "+self.u + " sending VOTE_MESSAGE  to the leader: "+self.leader_election.get_leader(self.round+1)),LoggingLevel.INFO)
+
             send(('VOTE_MESSAGE', (self.u, self.vote_msg)), to=self._validator_dict[self.leader_election.get_leader(self.round+1)]) # need to verify
 
+    def logToFile(msg,level):
+        f = open(self.logger_file, "a")
+        msg = "[" +level.name+"]: " +strftime("%Y-%m-%d %H:%M:%S ", gmtime())+"  \t\t "+ "[ "+ msg + " ]\n"
+        f.write(msg)
+        f.close()
 
     def process_certificate_qc(qc):
 
@@ -298,4 +337,8 @@ class Validator(process):
             print("Packet  content was forged or corrupt sent by",sender)
 
 
-
+    def initialiseLogger():
+        f = open(self.logger_file, "a")
+        msg = "######################## Logger for Validator: " + self.u +" ######################## " + "\n\n"
+        f.write(msg)
+        f.close()

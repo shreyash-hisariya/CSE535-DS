@@ -5,6 +5,16 @@
 # }
 from Models.timeout_msg import TimeoutMsg
 from Models.timeout_certificate import TimeoutCertificate
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 
 
 class Pacemaker:
@@ -68,6 +78,8 @@ class Pacemaker:
             high_qc_rounds_vector = [tmo_info.high_qc.vote_info.round for tmo_info in
                                      self.pending_timeouts[tmo_info.block_round] if tmo_info.high_qc is not None  ]
             signature_list = [tmo_info.signature for tmo_info in self.pending_timeouts[tmo_info.block_round]]
+            self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + "created Timeout Message: "),LoggingLevel.INFO)
+
             # print(high_qc_rounds_vector)
 #            print("******** process_timeout_msg", self.pending_timeouts_senders[tmo_info.block_round])
             return TimeoutCertificate(tmo_info.block_round, high_qc_rounds_vector, signature_list)
@@ -103,3 +115,9 @@ class Pacemaker:
     def stop_timer(self, round):
         # distAlgo:
         pass
+
+    def logToFile(self,msg,level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" +level.name+"]: " +strftime("%Y-%m-%d %H:%M:%S ", gmtime())+"  \t\t "+ "[ "+ msg + " ]\n"
+        f.write(msg)
+        f.close()

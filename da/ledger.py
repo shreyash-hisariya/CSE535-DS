@@ -1,6 +1,15 @@
 from collections import defaultdict
 from collections import OrderedDict
+from time import gmtime, strftime
 
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 
 # validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
@@ -16,13 +25,14 @@ class Ledger:
         # key is block_id and value is corresponding ledger_state_id.
         self.blockid_ledger_map = blockid_ledger_map#OrderedDict()
         self.persistent_ledger_file=persistent_ledger_file
-        self.clear_file()
+
         self.persistent_ledger_tracker = persistent_ledger_tracker
 
         #self.committed_block_map=committed_block_map#{} key blockId, value=block
 
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
+        self.clear_file()
 
     #def addToCommitedBlock(self,block):
     #    self.committed_block_map[block.id]=block
@@ -76,7 +86,9 @@ class Ledger:
 
     def clear_file(self):
         f = open(self.persistent_ledger_file,"a")
-        msg = "\n \n New test Case\n \n"
+        print("11Hello")
+        msg = "\n \n " + self.validator_info["Main"]["comment_for_test_case"] + " \n \n"
+        print("22Hello")
         f.write(msg)
         f.close()
     def writeToFile(self,key,value):
@@ -90,5 +102,13 @@ class Ledger:
         f = open(self.persistent_ledger_file, "a")
         msg = "\nNew Commit: " + self.validator_info["Main"]["u"] + " ledger_state_id: " + str(
             key) + " block_id: " + str(value[0]) + " Transaction: " + str(transaction)
+        self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + " adding commit for transaction: "+str(transaction)), LoggingLevel.INFO)
+
+        f.write(msg)
+        f.close()
+
+    def logToFile(self,msg, level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" + level.name + "]: " + strftime("%Y-%m-%d %H:%M:%S ", gmtime()) + "  \t\t " + "[ " + msg + " ]\n"
         f.write(msg)
         f.close()

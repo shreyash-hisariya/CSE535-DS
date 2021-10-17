@@ -4,14 +4,31 @@ import random
 import os
 import signal
 import validator as validator
+
 #import client as client
 from collections import OrderedDict
 
 from nacl.signing import SigningKey
 import json
 import io
+from time import gmtime, strftime
+
+import enum
+
+
+
+
+class LoggingLevel(enum.Enum):
+        NOTSET=0
+        DEBUG=1
+        INFO=2
+        WARNING=3
+        ERROR=4
+        CRITICAL=5
 
 class Client(process):
+
+
     def setup(idx, client_id, validators, NOPS, client_delay_between_request,combined_public_signature_dict,private_key):
         self.idx = idx
         self.client_id = client_id
@@ -22,7 +39,8 @@ class Client(process):
         self._signature_dict["private_key"]=private_key
         self.client_delay_between_request=client_delay_between_request
         self.NOPS=NOPS
-
+        self.logger_file= str(self.client_id)+'_'+str("Logger.txt")
+        self.initialiseLogger()
 
     def run():
         cmds = []
@@ -30,6 +48,8 @@ class Client(process):
             cmd = str(self.client_id) + " - " + str(i)
             signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
             #print("signature client",signature)
+            self.logToFile(str("Client: "+self.client_id + " sending request to all the validators" ),LoggingLevel.INFO)
+
             send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
             time.sleep(client_delay_between_request)
             cid += 1
@@ -59,6 +79,8 @@ class Client(process):
         validator, cmd, status, signature = res
         #self.verifySignature(validator,signature,"SUCCESS".encode('utf-8'))
         if cmd not in self.results:
+            self.logToFile(str("Client: "+self.client_id + " received result for the command from the validator "+validator+ " for  command " + cmd),LoggingLevel.INFO)
+
             output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
             self.results[cmd] = status
         elif self.results[cmd] != status:
@@ -82,6 +104,18 @@ class Client(process):
         if signed.message!=generated_hexcode_signed_msg:
             print("Packet  content was forged or corrupt sent by",sender)
 
+    def initialiseLogger():
+        print("CLIENT LOGGER",self.logger_file)
+        f = open(self.logger_file, "a")
+        msg = "######################## Logger for Client: " + self.client_id+" ######################## " + "\n\n"
+        f.write(msg)
+        f.close()
+
+    def logToFile(msg,level):
+        f = open(self.logger_file, "a")
+        msg = "[" +level.name+"]: " +strftime("%Y-%m-%d %H:%M:%S ", gmtime())+"  \t\t "+ "[ "+ msg + " ]\n"
+        f.write(msg)
+        f.close()
 
 class Test(process):
 
@@ -127,6 +161,8 @@ class Test(process):
         workload_for_validator=config["workload_for_validator"]
         faulty_validators=config["number_of_faulty_validators"]
         delta_for_pacemaker=config["delta_for_pacemaker"]
+        comment_for_test_case=config["_comment"]
+        print("comment_for_test_case ",comment_for_test_case)
         for i in range(1,n_validators+1):
             validator_ids.append('v'+str(i))
         for i in range(1,n_clients+1):
@@ -161,7 +197,7 @@ class Test(process):
         print("self.timeout_duration ",timeout_duration)
 
         for i in range(n_validators):
-           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker))
+           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker,comment_for_test_case))
 
         for i in range(n_clients):
            setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))

@@ -1,0 +1,84 @@
+import sys
+import time
+import random
+import os
+import signal
+import validator as validator
+
+from collections import OrderedDict
+
+from nacl.signing import SigningKey
+import json
+import io
+
+class Client(process):
+    def setup(idx, client_id, validators, NOPS, client_delay_between_request,combined_public_signature_dict,private_key):
+        self.idx = idx
+        self.client_id = client_id
+        self.cid = 0           # command id
+        self.results = dict()  # map of command id to result of command
+        self.count = dict()    # map of command id to number of responses
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+        self.client_delay_between_request=client_delay_between_request
+        self.NOPS=NOPS
+
+
+    def run():
+        cmds = []
+        for i in range(self.NOPS):
+            cmd = str(self.client_id) + " - " + str(i)
+            signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
+            #print("signature client",signature)
+            send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
+            time.sleep(client_delay_between_request)
+            cid += 1
+            cmds.append(cmd)
+            self.count[cmd] = 0
+        #await(each(cmd in cmds, has= self.count[cmd] == len(validators)))
+        cnt = 0
+        while(len(self.results) != self.NOPS and cnt < 3):
+            cnt = cnt + 1
+            for c in self.count.keys():
+                if self.count[c] == 0:
+                    #output(' SENDING AGAIN. SENDING AGAIN - ', c)
+                    #print("HELLLLL")
+                    signature=self._signature_dict["private_key"].sign(str(c).encode('utf-8'))
+                    #print("signature client",signature)
+                    send(('CLIENT_REQUEST', (self.client_id, c ,signature)), to=validators)
+                    time.sleep(client_delay_between_request)
+
+        output(' COMING OUT OF WHILE - ', len(self.results))
+        await(len(self.results) == (self.NOPS))
+        output('terminating client - ', self.idx)
+        send(('done',), to=parent())
+        #await(received(('done',)))
+
+    def receive(msg=('RESULT_RESPONSE', res)):
+
+        validator, cmd, status, signature = res
+        #self.verifySignature(validator,signature,"SUCCESS".encode('utf-8'))
+        if cmd not in self.results:
+            output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
+            self.results[cmd] = status
+        elif self.results[cmd] != status:
+            error('different result', cmd, status, 'than', self.results[cmd])
+        self.count[cmd] = self.count[cmd] + 1
+
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
+        #check sign here
+
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
+        try:
+            verify_key.verify(signed_msg)
+        except:
+            print("Signature was forged or corrupt in vote msg sent by",sender)
+            #think what has to be done (wait timeout
+            return
+
+        if signed.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+

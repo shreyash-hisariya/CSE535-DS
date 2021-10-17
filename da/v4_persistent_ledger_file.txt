@@ -765,3 +765,205 @@ New Commit: v4 ledger_state_id: -5681068096385781918 block_id: 28317982402230648
 New Commit: v4 ledger_state_id: -998425354312526526 block_id: -1124673767759100259 Transaction: ['c2 - 2', 'c1 - 3']
 New Commit: v4 ledger_state_id: -5512550118384574040 block_id: 6746068743790990860 Transaction: ['c2 - 3', 'c2 - 4']
 New Commit: v4 ledger_state_id: -6869698737024518098 block_id: -5441092678187798827 Transaction: ['c1 - 4']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -1577271467736335478 block_id: 411399191025808360 Transaction: ['c2 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 5359208642033912278 block_id: -4020139862243876612 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -8380782968147588282 block_id: 3334610103811073725 Transaction: ['c2 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 1322049677779306879 block_id: -3577218408198250956 Transaction: ['c2 - 0']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -4780207592494626553 block_id: -3531536081234716811 Transaction: ['c2 - 0']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -4249699598415362855 block_id: 1419012345034760131 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -3070693223001302675 block_id: 2758913418737953858 Transaction: ['c2 - 0']
+New Commit: v4 ledger_state_id: -1766798749901484807 block_id: -2555473634681460905 Transaction: ['c1 - 0', 'c1 - 1']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -1445532148528127767 block_id: -8124482089026476257 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 6961580463335434417 block_id: 6291696546877920942 Transaction: ['c2 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: -3459720963327573262 block_id: -1256745171738906682 Transaction: ['c1 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: 8815464893081118429 block_id: -3275756968388440078 Transaction: ['c1 - 2', 'c1 - 3']
+New Commit: v4 ledger_state_id: 4888602468549997245 block_id: 2325831452645128698 Transaction: ['c2 - 3', 'c1 - 4']
+New Commit: v4 ledger_state_id: -183907377382309521 block_id: 7655253110627237716 Transaction: ['c2 - 4']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -8982661075517676903 block_id: -4923411455949426114 Transaction: ['c2 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -9023994959367204365 block_id: -2681564504793356725 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 6588433813034212779 block_id: 8507747559317513375 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -484324667053786403 block_id: 5673458306399327780 Transaction: ['c2 - 0']
+New Commit: v4 ledger_state_id: -3900602082425350231 block_id: -3699415031866694138 Transaction: ['c1 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: -9003601721522668558 block_id: -8976182652321688812 Transaction: ['c1 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: -919565390578562368 block_id: 5972347961871476710 Transaction: ['c1 - 2', 'c2 - 3']
+New Commit: v4 ledger_state_id: 1897371532764963765 block_id: 8166797371973573000 Transaction: ['c1 - 3', 'c2 - 4']
+New Commit: v4 ledger_state_id: -2837655652426061948 block_id: -7296308981988686695 Transaction: ['c1 - 4']
+ ss 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -3823439609241957773 block_id: -4546227471051606588 Transaction: ['c2 - 0']
+New Commit: v4 ledger_state_id: 655142218830660066 block_id: -231835314985499424 Transaction: ['c1 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: -9074674302954366274 block_id: 2669981291530865751 Transaction: ['c1 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: 5552232626644170293 block_id: 6855549670491187055 Transaction: ['c1 - 2', 'c2 - 3']
+New Commit: v4 ledger_state_id: -473664178256745769 block_id: -3232216371432606910 Transaction: ['c1 - 3', 'c2 - 4']
+New Commit: v4 ledger_state_id: -4246268475365726362 block_id: -7361915521330506197 Transaction: ['c1 - 4']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: 2252467790707834643 block_id: 1212527085593819590 Transaction: ['c2 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -4940295758955685388 block_id: -1991274735839564430 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -6913011993515244503 block_id: -4598156710112721946 Transaction: ['c2 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: 852830319871446583 block_id: 1307556595514955586 Transaction: ['c1 - 1', 'c1 - 2']
+New Commit: v4 ledger_state_id: -5635111561367690816 block_id: 5072947356788517156 Transaction: ['c2 - 2', 'c2 - 3']
+New Commit: v4 ledger_state_id: -686372633364954910 block_id: -7531981872926468464 Transaction: ['c1 - 3', 'c2 - 4']
+New Commit: v4 ledger_state_id: 759005696724668422 block_id: 3328697024777077396 Transaction: ['c1 - 4']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -852314574543928389 block_id: 8619812366932698388 Transaction: ['c2 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -2321900494252225810 block_id: 3857730214341864510 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -2682366799829652871 block_id: 7456986645143929954 Transaction: ['c2 - 0', 'c1 - 1']
+New Commit: v4 ledger_state_id: -3581973271824739914 block_id: 8284214944199429971 Transaction: ['c2 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: -5502297992628482858 block_id: -100507131103317235 Transaction: ['c1 - 2', 'c1 - 3']
+New Commit: v4 ledger_state_id: 608426635801610792 block_id: -3857537215812481433 Transaction: ['c2 - 3', 'c2 - 4']
+New Commit: v4 ledger_state_id: 9180401769041855329 block_id: -6821088168732508705 Transaction: ['c1 - 4']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -8040338196772282467 block_id: 8965078904888630622 Transaction: ['c1 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: 759150344671128639 block_id: 3356875043287244519 Transaction: ['c1 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v4 ledger_state_id: -6357516982618355556 block_id: 5472930723996355738 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 8269625148580780328 block_id: 7695528579698242977 Transaction: ['c2 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: -1465359639200908194 block_id: 7189919030371422879 Transaction: ['c1 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: -3795422124657900554 block_id: 2764822669029579462 Transaction: ['c1 - 2', 'c1 - 3']
+New Commit: v4 ledger_state_id: 5979213660372750323 block_id: 8552466124177644407 Transaction: ['c2 - 3', 'c2 - 4']
+New Commit: v4 ledger_state_id: -5643862947298950181 block_id: 7913692284821044865 Transaction: ['c1 - 4']

@@ -1,0 +1,1 @@
+[INFO]: 2021-10-17 21:27:42   		 [ Client: c2 sending request to all the validators ]

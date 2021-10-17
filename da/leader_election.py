@@ -1,5 +1,15 @@
 import random
 import math
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 
 
 # validator_info  : consists of all the items which we  were accessing via Main.initializer
@@ -86,3 +96,8 @@ class Leader_election:
         return list(self.validator_info["validator_dict"].keys())[
             math.floor(curr_round + 1 / 2) % len(self.validator_info["validator_dict"])]
 
+    def logToFile(self,msg, level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" + level.name + "]: " + strftime("%Y-%m-%d %H:%M:%S ", gmtime()) + "  \t\t " + "[ " + msg + " ]\n"
+        f.write(msg)
+        f.close()
