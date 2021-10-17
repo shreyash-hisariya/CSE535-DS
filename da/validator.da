@@ -16,14 +16,17 @@ from Models.proposal_message import ProposalMessage
 
 class Validator(process):
 
-    def setup(idx, validator_dict, n_validators, signature_dict, client_dict):
+
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict):
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
         self._n_validators = n_validators
         self.client_dict = client_dict
 
-        self._signature_dict=signature_dict
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+
         self.round = 0
         self.leader = 0
         self.vote_msg = None
@@ -72,16 +75,16 @@ class Validator(process):
             if await(len(self.client_results) > 0):
 
                 for cmd in self.client_results.keys():
-                    output(self.u, ' SENDING BACK TO CLIENT - ', cmd)
-                    send(('RESULT_RESPONSE',(cmd, "SUCCESS")), to=self.get_client(cmd))
+                    signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+                    send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
                 self.client_results.clear()
                 self.run_done=False
             elif timeout(timer_duration) :
                 timeout_message = self.pacemaker.local_timeout_round()
                 #verify timeout msg
                 #let define timeoutmsg and uncomment this and below lines
-                #self.verifySignature(timeoutmsg.tmo_info.sender,timeoutmsg.tmo_info.signature)
-                #print("BROAD CAST TIMEOUT MESSAGE FROM - ", self.u, " FOR ROUND - ", self.pacemaker.current_round)
+                # if self.verifySignature(timeout_message.tmo_info.sender,timeout_message.tmo_info.signature,str(str(timeout_message.tmo_info.block_round) + high_qc_sign).encode('utf-8')):
+
                 send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
                 #break
 
@@ -89,12 +92,18 @@ class Validator(process):
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
-        client, cmd = request
-        #output(' NEW REQUEST - ', client, ' CMD - ', cmd)
+
+        client, cmd, signature = request
+        output(' NEW REQUEST - ', client, ' CMD - ', cmd)
+        if self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)== False:
+            return
+
         if cmd in self.results.keys():
             curr_client = self.get_client(cmd)
             #output(' RESULT IN CACHE FOR COMMAND - ', cmd)
-            send(('RESULT_RESPONSE',(cmd, "SUCCESS")),to=curr_client)
+            signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+            send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
+
             return
 
         self.mempool.add_transaction(cmd,"PENDING")
@@ -104,9 +113,9 @@ class Validator(process):
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
         client, proposal_msg,author_of_proposal = m
-        if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
-            time.sleep(3)
-            return
+        #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
+        #    time.sleep(3)
+        #    return
 
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
@@ -131,7 +140,10 @@ class Validator(process):
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
 
         #check sign here
-        self.verifySignature(M.sender,M.signature)
+
+
+        if self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))== False:
+            return
         self.qc = self.block_tree.process_vote(M)
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
@@ -189,15 +201,22 @@ class Validator(process):
             return True
         return False
 
+    def generateSignRecur(signatures_list):
+        hash_of_all_sign=''
+        for i in range(0,len(signatures_list)):
+            hash_of_all_sign=str(hash(str(hash(signatures_list[i]))+hash_of_all_sign))
+
+        return hash_of_all_sign
 
     def process_proposal_msg(client, P,author_of_proposal): #Function def changed to include client
 
-        self.verifySignature(author_of_proposal,P.signature)
-
-
+        if self.verifySignature(author_of_proposal,P.signature,str(P.block.id).encode('utf-8'))==False:
+            return
         if client is None or P.block.payload is None:
             #check qc sign
-            self.verifySignature(P.block.qc.author,P.block.qc.author_signature)
+            signatures_list=P.block.qc.signatures
+            if self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))==False:
+                return
 
 
         #if P is not None and P.block.payload is not None:
@@ -239,12 +258,21 @@ class Validator(process):
             self.pacemaker.advance_round_qc(qc)#need to verify
 
 
-    def verifySignature(sender,msg):
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
         #check sign here
-        verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
         try:
-            verify_key.verify(msg)
+            verify_key.verify(signed_msg)
         except:
             print("Signature was forged or corrupt in vote msg sent by",sender)
             #think what has to be done (wait timeout
             return
+
+        if signed_msg.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+
+
+

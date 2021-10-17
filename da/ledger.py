@@ -15,13 +15,14 @@ class Ledger:
         # key is block_id and value is corresponding ledger_state_id.
         self.blockid_ledger_map = blockid_ledger_map#OrderedDict()
         self.persistent_ledger_file=persistent_ledger_file
-        self.committed_block_map=committed_block_map#{} key blockId, value=block
+        self.clear_file()
+        #self.committed_block_map=committed_block_map#{} key blockId, value=block
 
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
 
-    def addToCommitedBlock(self,block):
-        self.committed_block_map[block.id]=block
+    #def addToCommitedBlock(self,block):
+    #    self.committed_block_map[block.id]=block
 
 
     def speculate(self, prev_block_id, block_id, txns):
@@ -61,13 +62,20 @@ class Ledger:
 
     def committed_block(self, block_id):
 
-        if block_id in self.committed_block_map:
-            return self.committed_block_map[block_id]
+        # if block_id in self.committed_block_map:
+        #     return self.committed_block_map[block_id]
+        if block_id in self.validator_info["BlockTree"].pending_block_tree:
+            return self.validator_info["BlockTree"].pending_block_tree[block_id]
         #[block_id, txns]
         # if block_id in self.blockid_ledger_map and self.blockid_ledger_map[block_id] in self.persistent_ledger_states:
         #     return self.persistent_ledger_states[self.blockid_ledger_map[block_id]][0]
         #
 
+    def clear_file(self):
+        f = open(self.persistent_ledger_file,"a")
+        msg = "\n \n New test Case\n \n"
+        f.write(msg)
+        f.close()
     def writeToFile(self,key,value):
 
         f = open(self.persistent_ledger_file, "a")

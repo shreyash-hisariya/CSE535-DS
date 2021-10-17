@@ -253,3 +253,155 @@ New Commit: v4 ledger_state_id: 7329437253309900980 block_id: -33374153699887972
 New Commit: v4 ledger_state_id: 6727114963345359216 block_id: -5458613875677430037 Transaction: ['c1 - 0']
 New Commit: v4 ledger_state_id: 4810992489368507659 block_id: -8545297525113847311 Transaction: ['c1 - 1', 'c1 - 2']
 New Commit: v4 ledger_state_id: -4747189162171997144 block_id: -4930429058143146916 Transaction: ['c1 - 3', 'c1 - 4']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -8156425641694152981 block_id: -1558084682039473360 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 4353343555716940434 block_id: -4424254347310724586 Transaction: ['c1 - 0']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 4486884677644603046 block_id: 1875830429980338381 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -303258983431796213 block_id: 4450735131637136449 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 8184249892763901174 block_id: -8389764820480665238 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 861664665566862348 block_id: -8536411154838641146 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -940742993206239598 block_id: 2792024092479815352 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 6237840620393113353 block_id: 7430633080699857381 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -5463544143418930296 block_id: 4404122281043953161 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -5271159554651304065 block_id: 8949899889103158844 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 8631019249589556051 block_id: -3136183625327494723 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -8631156911837788416 block_id: -6899082152962804575 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -7969952182583195647 block_id: 5246485235927100387 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 8594024300269177387 block_id: -4489234875819251565 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -2685720549980145638 block_id: -413435084380666006 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 5662350517186492915 block_id: -6416452613978710408 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -9070330393014255745 block_id: 7725036093724172654 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 5949017139589117767 block_id: -4025786869890033939 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: -8923660915503337122 block_id: 6340188633375247106 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 6646571687611032839 block_id: 3831140026506857801 Transaction: ['c1 - 1']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 7586777429565097701 block_id: -6274607469248109240 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 2531700739874159721 block_id: -7769318305395451448 Transaction: ['c1 - 1']
+New Commit: v4 ledger_state_id: 7397974529084076543 block_id: -856893223196569499 Transaction: ['c1 - 2']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 4348929437392643805 block_id: 4699777907323910087 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 509818108918669301 block_id: -972938662069966453 Transaction: ['c1 - 1']
+New Commit: v4 ledger_state_id: 1491432193780909260 block_id: 5242854471900468524 Transaction: ['c1 - 2']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 5579295948649513295 block_id: -201676351478040472 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -7478856307215819924 block_id: -8776334112010761097 Transaction: ['c1 - 1']
+New Commit: v4 ledger_state_id: -1226852219145751009 block_id: -263760709981980742 Transaction: ['c1 - 2']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 5579295948649513295 block_id: -201676351478040472 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 9107169075514436444 block_id: 1234501897741476089 Transaction: ['c2 - 0', 'c1 - 1']
+New Commit: v4 ledger_state_id: -8650724293995047680 block_id: -1866845038217232450 Transaction: ['c2 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: 1932576372095107349 block_id: 1206531991005456610 Transaction: ['c1 - 2', 'c1 - 3']
+New Commit: v4 ledger_state_id: 4447691235482967487 block_id: 2378426419369954956 Transaction: ['c2 - 3', 'c1 - 4']
+New Commit: v4 ledger_state_id: 20428623787389840 block_id: -8474388591853491147 Transaction: ['c2 - 3', 'c2 - 4']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 1190739519140383385 block_id: 1524433220992115824 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: -9206760858223878609 block_id: -5478762378365719241 Transaction: ['c1 - 1']
+New Commit: v4 ledger_state_id: 1349115329658551736 block_id: 4490155681770502147 Transaction: ['c1 - 2']
+ 
+ New test Case
+ 
+
+New Commit: v4 ledger_state_id: 1190739519140383385 block_id: 1524433220992115824 Transaction: ['c1 - 0']
+New Commit: v4 ledger_state_id: 6499920291590879794 block_id: -7208026461340979855 Transaction: ['c2 - 0', 'c2 - 1']
+New Commit: v4 ledger_state_id: -7851432374701073266 block_id: -8912177734334974237 Transaction: ['c1 - 1', 'c2 - 2']
+New Commit: v4 ledger_state_id: -2586020257324834383 block_id: 6043855667036839343 Transaction: ['c1 - 2', 'c2 - 3']
+New Commit: v4 ledger_state_id: 7970753006936328945 block_id: -8179879762007901612 Transaction: ['c1 - 3', 'c1 - 4']
+New Commit: v4 ledger_state_id: -945083353322223473 block_id: 2589941773332888423 Transaction: ['c1 - 3', 'c2 - 4']
