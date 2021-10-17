@@ -1,4 +1,5 @@
 # validator
+import random
 from collections import defaultdict
 from nacl.signing import VerifyKey
 from collections import OrderedDict
@@ -17,7 +18,9 @@ from Models.proposal_message import ProposalMessage
 class Validator(process):
 
 
-    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict):
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict,timeoutWorkloadInfo):
+
+
 
         self._idx = idx #redundant
         self._validator_dict = validator_dict
@@ -26,6 +29,7 @@ class Validator(process):
 
         self._signature_dict=combined_public_signature_dict
         self._signature_dict["private_key"]=private_key
+        self._timeoutWorkloadInfo=timeoutWorkloadInfo
 
         self.round = 0
         self.leader = 0
@@ -43,7 +47,7 @@ class Validator(process):
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
 
         self.mempool = Mempool()
-        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
+        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,set())
         self.block_tree = Block_tree({},{},None,None)
         self.safety = Safety(self._signature_dict['private_key'],self._signature_dict['validators_public_key'],-1,-1,-1)
         self.pacemaker = Pacemaker(0,None,{},{})
@@ -88,7 +92,7 @@ class Validator(process):
                 send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
                 #break
 
-        await(self.pacemaker.current_round > 12)
+        await(self.pacemaker.current_round > 4)
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
@@ -96,6 +100,7 @@ class Validator(process):
         client, cmd, signature = request
         output(' NEW REQUEST - ', client, ' CMD - ', cmd)
         if self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)== False:
+
             return
 
         if cmd in self.results.keys():
@@ -111,11 +116,15 @@ class Validator(process):
         self.process_new_round_event(self.pacemaker.last_round_tc,client,cmd)
 
 
+
     def receive(msg=('PROPOSAL_MESSAGE', m)):
         client, proposal_msg,author_of_proposal = m
         #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
-        #    time.sleep(3)
-        #    return
+        if self._timeoutWorkloadInfo is not None and self.u in self._timeoutWorkloadInfo["validators_getting_timeouts"] and  self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] and proposal_msg.last_round_tc is None:
+            #time.sleep(3)
+        #    print("Yaha nahi aane ka")
+            time.sleep(self._timeoutWorkloadInfo["timeout_duration"])
+            return
 
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
@@ -128,8 +137,11 @@ class Validator(process):
     def receive(msg=('TIMEOUT_MESSAGE',m)):
 
         validator_id, timeout_msg = m
-        if self.u=="v3" and self.pacemaker.current_round==1:
-            output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
+        #if self.u=="v3" and self.pacemaker.current_round==1:
+        #if  self.pacemaker.current_round==1:
+        if  self._timeoutWorkloadInfo is not None and self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] :
+        #if self.pacemaker.current_round ==1 :
+            output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.")
             self.process_timeout_msg(timeout_msg)
 
     def get_client(cmd):
@@ -145,9 +157,11 @@ class Validator(process):
         if self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))== False:
             return
         self.qc = self.block_tree.process_vote(M)
+
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
             self.process_new_round_event(self.pacemaker.last_round_tc, None, None)
+
 
     def process_timeout_msg(M):
         #add code for decrypting timeout info (check page no 12)
@@ -180,18 +194,21 @@ class Validator(process):
             signature=self._signature_dict["private_key"].sign(str(block.id).encode('utf-8'))
             #print(block.id,":PROPOSAL signature",signature)
             p = ProposalMessage(block, last_tc, self.block_tree.high_commit_qc, signature)
-            #print("author_of_proposal ",self.u, "P.signature ",p.signature)
 
             returnKeys=[]
             if M is None:
+                print("author_of_proposal ",self.u, p.block.payload)
+
                 sender_list=[]
                 for k,v in self._validator_dict.items():
                     if k != self.u:
                         sender_list.append(v)
                         returnKeys.append(k)
+
                 send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=sender_list)
             else:
                 send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=list(self._validator_dict.values()))
+
 
 
 
@@ -212,11 +229,14 @@ class Validator(process):
 
         if self.verifySignature(author_of_proposal,P.signature,str(P.block.id).encode('utf-8'))==False:
             return
-        if client is None or P.block.payload is None:
+
+        print("check" ,client, P.block.payload)
+        #if client is None or P.block.payload is None:
             #check qc sign
-            signatures_list=P.block.qc.signatures
-            if self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))==False:
-                return
+            #print("waah")
+            #signatures_list=P.block.qc.signatures
+            #if self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))==False:
+            #    return
 
 
         #if P is not None and P.block.payload is not None:

@@ -46,9 +46,11 @@ class Block_tree:
             signatures_list = qc.signatures
             if self.verifySignature(qc.author,qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8')) ==False:
                 return False
-
+        if qc is not None:
+            print("process_qc2",qc.ledger_commit_info.commit_state_id)
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
             ###shreyas: need to revisit
+            #print("process_qc2")
             self.validator_info["Ledger"].commit(qc.vote_info.parent_id)
             ###Saurabh: update mempool
             self.prune(qc.vote_info.parent_id)
