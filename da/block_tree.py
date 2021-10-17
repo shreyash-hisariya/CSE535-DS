@@ -20,6 +20,7 @@ class Block_tree:
 
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
+
     def getMaxRound(self, qc, high_commit_qc,update_high_commit_qc):
 
         if qc is not None:

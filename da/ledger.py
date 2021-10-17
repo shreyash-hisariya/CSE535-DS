@@ -52,8 +52,9 @@ class Ledger:
             self.validator_info["Mempool"].update_transaction(str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1][0]), 'COMPLETE')
             # print("Writing to file")
             print("TRANSACTION : ", self.pending_ledger_states[self.blockid_ledger_map[block_id]][1])
-            self.validator_info["Main"]["results"][str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1][0])] = "COMPLETED"
-            self.validator_info["Main"]["client_results"][str(self.pending_ledger_states[self.blockid_ledger_map[block_id]][1][0])] = "COMPLETED"
+            for trans in self.pending_ledger_states[self.blockid_ledger_map[block_id]][1]:
+                self.validator_info["Main"]["results"][str(trans)] = "COMPLETED"
+                self.validator_info["Main"]["client_results"][str(trans)] = "COMPLETED"
             if self.blockid_ledger_map[block_id] in self.pending_ledger_states:
                 del self.pending_ledger_states[self.blockid_ledger_map[block_id]]
         else:

@@ -4,9 +4,6 @@ import random
 import validator as validator
 #import client as client
 from collections import OrderedDict
-NOPS = 6
-def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
-operations = {i: operation(i) for i in range(NOPS)}
 
 from nacl.signing import SigningKey
 import json
@@ -25,6 +22,7 @@ class Client(process):
 
 
     def run():
+        cmds = []
         for i in range(NOPS):
             cmd = str(self.client_id) + " - " + str(i)
             signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
@@ -32,20 +30,37 @@ class Client(process):
             send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
             time.sleep(client_delay_between_request)
             cid += 1
-        #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
-        #output('terminating')
-        #send(('done',), to=parent())
-        await(False)
+            cmds.append(cmd)
+            self.count[cmd] = 0
+        #await(each(cmd in cmds, has= self.count[cmd] == len(validators)))
+        cnt = 0
+        while(len(self.results) != NOPS and cnt < 3):
+            cnt = cnt + 1
+            for c in self.count.keys():
+                if self.count[c] == 0:
+                    #output(' SENDING AGAIN. SENDING AGAIN - ', c)
+                    print("HELLLLL")
+                    signature=self._signature_dict["private_key"].sign(str(c).encode('utf-8'))
+                    print("signature client",signature)
+                    send(('CLIENT_REQUEST', (self.client_id, c ,signature)), to=validators)
+                    time.sleep(client_delay_between_request)
+
+        output(' COMING OUT OF WHILE - ', len(self.results))
+        await(len(self.results) == (NOPS))
+        output('terminating client - ', self.idx)
+        send(('done',), to=parent())
+
 
     def receive(msg=('RESULT_RESPONSE', res)):
-        validator,cmd, status,signature = res
+
+        validator, cmd, status, signature = res
         #self.verifySignature(validator,signature,"SUCCESS".encode('utf-8'))
-        if cmd not in results:
+        if cmd not in self.results:
             output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
-            results[cmd] = status
-        elif results[cmd] != status:
-            error('different result', cid, status, 'than', results[cid])
-        count[cid] = 1 if cid not in count else count[cid] + 1
+            self.results[cmd] = status
+        elif self.results[cmd] != status:
+            error('different result', cmd, status, 'than', self.results[cmd])
+        self.count[cmd] = self.count[cmd] + 1
 
     def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
         #check sign here
@@ -63,8 +78,6 @@ class Client(process):
 
         if signed.message!=generated_hexcode_signed_msg:
             print("Packet  content was forged or corrupt sent by",sender)
-
-
 
 
 class Test(process):
@@ -138,7 +151,7 @@ class Test(process):
         start(clients)
         await(each(c in clients, has=received(('done',), from_=c)))
         output('All clients done.')
-
+        #exit()
         #await(False)
 
 def main():
@@ -151,8 +164,4 @@ def main():
         setup(t, (config[i],))
         start(t)
         time.sleep(20)
-
-
-
-
 
