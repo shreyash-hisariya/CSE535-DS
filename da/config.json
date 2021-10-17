@@ -1,24 +1,13 @@
 ﻿[
   {
-    "_comment": "TEST CASE 1 : One Client - 1 Command (GENESIS)",
+    "_comment": "TEST CASE 3 : One Client - 1 Command with 1 validator timeout ",
     "number_of_clients": 1,
     "number_of_validators": 4,
     "number_of_faulty_validators": 1,
     "seed_for_random_numbers": 1,
     "value_for_delta_for_timeout": 2,
     "workload_for_client": {
-      "number_of_request": 1,
+      "number_of_request": 5,
       "delay_between_request": 2
     }
-  },
-  {"_comment": "TEST CASE 2 : One Client - 10 Commands",
-  "number_of_clients": 1,
-  "number_of_validators": 4,
-  "number_of_faulty_validators": 1,
-  "seed_for_random_numbers": 1,
-  "value_for_delta_for_timeout": 2,
-  "workload_for_client": {
-    "number_of_request": 10,
-    "delay_between_request": 2
-  }
-}]
+  }]

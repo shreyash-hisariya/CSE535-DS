@@ -43,7 +43,7 @@ class Validator(process):
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
 
         self.mempool = Mempool()
-        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
+        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{},set())
         self.block_tree = Block_tree({},{},None,None)
         self.safety = Safety(self._signature_dict['private_key'],self._signature_dict['validators_public_key'],-1,-1,-1)
         self.pacemaker = Pacemaker(0,None,{},{})
@@ -81,14 +81,12 @@ class Validator(process):
                 self.run_done=False
             elif timeout(timer_duration) :
                 timeout_message = self.pacemaker.local_timeout_round()
-                #verify timeout msg
-                #let define timeoutmsg and uncomment this and below lines
                 # if self.verifySignature(timeout_message.tmo_info.sender,timeout_message.tmo_info.signature,str(str(timeout_message.tmo_info.block_round) + high_qc_sign).encode('utf-8')):
 
-                send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
+                send(('TIMEOUT_MESSAGE', (self.u, timeout_message)), to=list(self._validator_dict.values()))
                 #break
 
-        await(self.pacemaker.current_round > 12)
+        await(self.pacemaker.current_round > 6)
 
 
     def receive(msg=('CLIENT_REQUEST', request)):
@@ -117,6 +115,11 @@ class Validator(process):
         #    time.sleep(3)
         #    return
 
+        #if (self.u == "v1") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
+        #    time.sleep(3)
+        #    return
+
+
         self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
 
@@ -129,8 +132,10 @@ class Validator(process):
 
         validator_id, timeout_msg = m
         if self.u=="v3" and self.pacemaker.current_round==1:
-            output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
+        #    output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
+            #if self.pacemaker.current_round==1:
             self.process_timeout_msg(timeout_msg)
+
 
     def get_client(cmd):
         cmd = cmd.replace(" ", "")
@@ -139,11 +144,9 @@ class Validator(process):
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
 
-        #check sign here
-
-
         if self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))== False:
             return
+
         self.qc = self.block_tree.process_vote(M)
         if self.qc is not None:
             self.process_certificate_qc(self.qc)

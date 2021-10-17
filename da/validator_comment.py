@@ -33,6 +33,17 @@
     "delay_between_request": 2
   }
 },
+  {"_comment": "TEST CASE 3 : One Client - 3 Command with 1 validator timeout ",
+  "number_of_clients": 1,
+  "number_of_validators": 4,
+  "number_of_faulty_validators": 1,
+  "seed_for_random_numbers": 1,
+  "value_for_delta_for_timeout": 2,
+  "workload_for_client": {
+    "number_of_request": 3,
+    "delay_between_request": 2
+  }
+},
   {"_comment": "TEST CASE 4 : One Client - 1 Command with 2f+1 validator timeout - TC generation",
   "number_of_clients": 1,
   "number_of_validators": 4,
@@ -79,6 +90,17 @@
   }
 },
   {"_comment": "TEST CASE 8 : 3 Client - 3 Command with 2f+1 validator timeout - TC generation",
+  "number_of_clients": 1,
+  "number_of_validators": 4,
+  "number_of_faulty_validators": 3,
+  "seed_for_random_numbers": 1,
+  "value_for_delta_for_timeout": 2,
+  "workload_for_client": {
+    "number_of_request": 1,
+    "delay_between_request": 2
+  }
+},
+  {"_comment": "TEST CASE 8 : ONE VALIDATOR ALWAYS TIMEOUT",
   "number_of_clients": 1,
   "number_of_validators": 4,
   "number_of_faulty_validators": 3,

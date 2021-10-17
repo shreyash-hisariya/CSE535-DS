@@ -8,13 +8,14 @@ from collections import OrderedDict
 # }
 
 class Ledger:
-    def __init__(self, pending_ledger_states,persistent_ledger_states,blockid_ledger_map,persistent_ledger_file,committed_block_map,validator_info=None):
+    def __init__(self, pending_ledger_states,persistent_ledger_states,blockid_ledger_map,persistent_ledger_file,committed_block_map,persistent_ledger_entry,validator_info=None):
         self.validator_info = validator_info
         self.pending_ledger_states = pending_ledger_states#defaultdict()  # key: ledger_state_id, value:[block_id, txns] #need to verify if block id has to be added
         self.persistent_ledger_states = persistent_ledger_states# defaultdict()
         # key is block_id and value is corresponding ledger_state_id.
         self.blockid_ledger_map = blockid_ledger_map#OrderedDict()
         self.persistent_ledger_file=persistent_ledger_file
+        self.persistent_ledger_entry = persistent_ledger_entry
         self.clear_file()
         #self.committed_block_map=committed_block_map#{} key blockId, value=block
 
@@ -77,9 +78,15 @@ class Ledger:
         f.write(msg)
         f.close()
     def writeToFile(self,key,value):
+        final_transaction=[]
+
+        for t in value[1]:
+            if t not in self.persistent_ledger_entry:
+                final_transaction.append(t)
+                self.persistent_ledger_entry.add(t)
 
         f = open(self.persistent_ledger_file, "a")
-        msg="\nNew Commit: "+self.validator_info["Main"]["u"]+" ledger_state_id: " + str(key)+" block_id: "+str(value[0])+" Transaction: "+str(value[1])
+        msg="\nNew Commit: "+self.validator_info["Main"]["u"]+" ledger_state_id: " + str(key)+" block_id: "+str(value[0])+" Transaction: "+str(final_transaction)
         f.write(msg)
         f.close()
 
