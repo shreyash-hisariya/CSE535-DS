@@ -43,7 +43,8 @@ class Validator(process):
         file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
 
         self.mempool = Mempool()
-        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
+        #self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
+        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,set())
         self.block_tree = Block_tree({},{},None,None)
         self.safety = Safety(self._signature_dict['private_key'],self._signature_dict['validators_public_key'],-1,-1,-1)
         self.pacemaker = Pacemaker(0,None,{},{})
@@ -127,7 +128,7 @@ class Validator(process):
     def receive(msg=('TIMEOUT_MESSAGE',m)):
 
         validator_id, timeout_msg = m
-        if self.u=="v3" and self.pacemaker.current_round==1:
+        if  self.pacemaker.current_round==1:
             output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
             self.process_timeout_msg(timeout_msg)
 
