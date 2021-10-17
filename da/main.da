@@ -1,62 +1,195 @@
 import sys
 import time
 import random
+import os
+import signal
 import validator as validator
+#import client as client
 from collections import OrderedDict
-NOPS = 1
-def operation(i): return lambda state: (state+[i], ['result',i,'on',state])
-operations = {i: operation(i) for i in range(NOPS)}
+
+from nacl.signing import SigningKey
+import json
+import io
 
 class Client(process):
-    def setup(idx, validators, NOPS):
+    def setup(idx, client_id, validators, NOPS, client_delay_between_request,combined_public_signature_dict,private_key):
         self.idx = idx
+        self.client_id = client_id
         self.cid = 0           # command id
         self.results = dict()  # map of command id to result of command
         self.count = dict()    # map of command id to number of responses
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+        self.client_delay_between_request=client_delay_between_request
+        self.NOPS=NOPS
+
 
     def run():
-        for i in range(NOPS):
-            cmd = str(idx) + " - " + str(cid) + " - " + str(i)
-            send(('CLIENT_REQUEST', (self, cmd, cid)), to= validators)
-            #await(cid in results)
-            #output('received result', cid, results[cid])
-            time.sleep(2.5)
+        cmds = []
+        for i in range(self.NOPS):
+            cmd = str(self.client_id) + " - " + str(i)
+            signature=self._signature_dict["private_key"].sign(str(cmd).encode('utf-8'))
+            #print("signature client",signature)
+            send(('CLIENT_REQUEST', (self.client_id, cmd,signature)), to=validators)
+            time.sleep(client_delay_between_request)
             cid += 1
-        #await(each(cid in range(NOPS), has= count[cid] == len(validators)))
-        #output('terminating')
-        #send(('done',), to=parent())
+            cmds.append(cmd)
+            self.count[cmd] = 0
+        #await(each(cmd in cmds, has= self.count[cmd] == len(validators)))
+        cnt = 0
+        while(len(self.results) != self.NOPS and cnt < 3):
+            cnt = cnt + 1
+            for c in self.count.keys():
+                if self.count[c] == 0:
+                    #output(' SENDING AGAIN. SENDING AGAIN - ', c)
+                    #print("HELLLLL")
+                    signature=self._signature_dict["private_key"].sign(str(c).encode('utf-8'))
+                    #print("signature client",signature)
+                    send(('CLIENT_REQUEST', (self.client_id, c ,signature)), to=validators)
+                    time.sleep(client_delay_between_request)
 
-    def receive(msg= ('response', cid, result)):
-        debug('### response', cid, result)
-        if cid not in results:
-            results[cid] = result
-        elif results[cid] != result:
-            error('different result', cid, result, 'than', results[cid])
-        count[cid] = 1 if cid not in count else count[cid] + 1
+        output(' COMING OUT OF WHILE - ', len(self.results))
+        await(len(self.results) == (self.NOPS))
+        output('terminating client - ', self.idx)
+        send(('done',), to=parent())
+        #await(received(('done',)))
+
+    def receive(msg=('RESULT_RESPONSE', res)):
+
+        validator, cmd, status, signature = res
+        #self.verifySignature(validator,signature,"SUCCESS".encode('utf-8'))
+        if cmd not in self.results:
+            output(' RESPONSE RECEIVED FOR COMMAND - ', cmd)
+            self.results[cmd] = status
+        elif self.results[cmd] != status:
+            error('different result', cmd, status, 'than', self.results[cmd])
+        self.count[cmd] = self.count[cmd] + 1
+
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
+        #check sign here
+
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
+        try:
+            verify_key.verify(signed_msg)
+        except:
+            print("Signature was forged or corrupt in vote msg sent by",sender)
+            #think what has to be done (wait timeout
+            return
+
+        if signed.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+
+
+class Test(process):
+
+    def setup(config):
+        self.config=config
+
+    def generateKeys(validator_ids,client_ids):
+
+        #signature_dict{
+        #   "validators_public_key":{"specific_validator_id":validator_public_key}
+        #   "clients_public_key":{"specific_client_id":client_public_key}
+        #   }
+
+
+        #first generate signing_key for all the validators
+        private_keys_validators=[SigningKey.generate() for i in range(0,len(validator_ids)) ]
+        private_keys_clients=[SigningKey.generate() for i in range(0,len(client_ids)) ]
+
+
+        public_signing_keys_validators={}
+        for i in range(0,len(private_keys_validators)):
+            public_signing_keys_validators[validator_ids[i]]=private_keys_validators[i].verify_key.encode()
+
+        public_signing_keys_clients={}
+        for i in range(0,len(private_keys_clients)):
+            public_signing_keys_clients[client_ids[i]]=private_keys_clients[i].verify_key.encode()
+
+        #lets create signature_dict for all the validators
+        combined_public_signature_dict={}
+        combined_public_signature_dict["validators_public_key"]=public_signing_keys_validators
+        combined_public_signature_dict["clients_public_key"]=public_signing_keys_clients
+        return combined_public_signature_dict,private_keys_validators,private_keys_clients
+
+
+    def run():
+        config=self.config
+        n_validators = config["number_of_validators"]
+        n_clients = config["number_of_clients"]
+        validator_ids=[]
+        client_ids = []
+        client_NOPS=config["workload_for_client"]["number_of_request"]
+        client_delay_between_request=config["workload_for_client"]["delay_between_request"]
+        workload_for_validator=config["workload_for_validator"]
+        faulty_validators=config["number_of_faulty_validators"]
+        delta_for_pacemaker=config["delta_for_pacemaker"]
+        for i in range(1,n_validators+1):
+            validator_ids.append('v'+str(i))
+        for i in range(1,n_clients+1):
+            client_ids.append('c'+str(i))
+
+        validators = list(new(validator.Validator, num= n_validators))
+        clients = list(new(Client, num= n_clients))
+        combined_public_signature_dict,private_keys_validators,private_keys_clients=generateKeys(validator_ids,client_ids)
+
+        validator_dict = OrderedDict()
+        for i in range(0, len(validator_ids)):
+            id = validators[i]
+            validator_dict[validator_ids[i]]=id
+
+        client_dict = OrderedDict()
+        for i in range(0, len(client_ids)):
+            id = clients[i]
+            client_dict[client_ids[i]]=id
+
+        validators_getting_timeouts=random.sample(validator_ids,workload_for_validator["number_of_validators_getting_timed_out"])
+        timeouts_rounds=[workload_for_validator["round_getting_timeout"]]
+        timeout_duration=workload_for_validator["timeout_duration"]
+
+        timeoutWorkloadInfo={
+        "validators_getting_timeouts":validators_getting_timeouts,
+        "timeouts_rounds_list":timeouts_rounds,
+        "timeout_duration":timeout_duration
+        }
+
+        print("self.validators_getting_timeouts ",validators_getting_timeouts)
+        print("self.timeout_duration ",timeouts_rounds)
+        print("self.timeout_duration ",timeout_duration)
+
+        for i in range(n_validators):
+           setup(validators[i], args=(validator_ids[i], validator_dict, n_validators, combined_public_signature_dict,private_keys_validators[i], client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker))
+
+        for i in range(n_clients):
+           setup(clients[i], args=(clients[i], client_ids[i], validators, client_NOPS, client_delay_between_request,combined_public_signature_dict,private_keys_clients[i]))
+
+        start(validators)
+        start(clients)
+        await(each(c in clients, has=received(('done',), from_=c)))
+        output(' SENDING DONE TO CLIENTS AND VALIDATORS')
+        for c in clients:
+            send(('done',), to= (c))
+
+        for v in validators:
+            send(('done',), to= (v))
+
+        send(('done',), to=parent())
 
 def main():
 
-    n_validators = 4
-    n_clients = 1
-    validator_ids = ['v1', 'v2', 'v3', 'v4']
-    client_ids = ['c1']
+    with open('config.json',encoding='utf-8-sig') as f:
+        config = json.load(f)
 
-    validators = list(new(validator.Validator, num= n_validators))
-    clients = list(new(Client, num= n_clients))
+    for i in range(len(config)):
+        t=new(Test)
+        setup(t, (config[i],))
+        start(t)
+        await(received(('done',), from_=t))
+        send(('done',), to= (t))
 
-    validator_dict = OrderedDict()
-    for i in range(0, len(validator_ids)):
-        id = validators[i]
-        validator_dict[validator_ids[i]]=id
+    output('COMPLETED')
 
-    for i in range(n_validators):
-       setup(validators[i], args=(validator_ids[i], validator_dict, n_validators))
 
-    for i in range(n_clients):
-       setup(clients[i], args=(clients[i], validators, NOPS))
-
-    start(validators)
-    start(clients)
-    await(each(c in clients, has=received(('done',), from_=c)))
-    output('All clients done.')
-#    send(('done',), to= (acceptors|replicas|leaders))

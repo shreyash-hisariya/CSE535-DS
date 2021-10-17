@@ -1,5 +1,7 @@
 # validator
-
+from collections import defaultdict
+from nacl.signing import VerifyKey
+from collections import OrderedDict
 import sys
 import time
 import da
@@ -11,15 +13,23 @@ from pacemaker import Pacemaker
 from mempool import Mempool
 from leader_election import Leader_election
 from Models.proposal_message import ProposalMessage
-ID = 0
-PROCESS_ID = 1
-IP = 2
 
 class Validator(process):
-    def setup(idx, validator_dict, n_validators):
+
+
+    def setup(idx, validator_dict, n_validators, combined_public_signature_dict,private_key, client_dict,timeoutWorkloadInfo,client_NOPS,faulty_validators,delta_for_pacemaker):
+
         self._idx = idx #redundant
         self._validator_dict = validator_dict
         self._n_validators = n_validators
+        self.client_dict = client_dict
+        self.client_NOPS=client_NOPS
+        self.faulty_validators=faulty_validators
+        self.delta_for_pacemaker=delta_for_pacemaker
+
+        self._signature_dict=combined_public_signature_dict
+        self._signature_dict["private_key"]=private_key
+        self._timeoutWorkloadInfo=timeoutWorkloadInfo
 
         self.round = 0
         self.leader = 0
@@ -28,82 +38,139 @@ class Validator(process):
         self.qc = None
         self.u = idx
         self.b = None
+        self.results = {}
+        self.client_results = {}
 
-        main_dict = {'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,
-        'b' : self.b}
+        #print("VALIDATOR:",self.u," My keys: ",self._signature_dict)
+        main_dict = {'faulty_validators':self.faulty_validators,'round' : self.round, 'leader' : self.leader, 'vote_msg' : self.vote_msg, 'tc' : self.tc, 'qc' : self.qc, 'u' : self.u,'b' : self.b, 'results' : self.results,'signature_dict':self._signature_dict, 'client_results' : self.client_results}
 
-        self.ledger = Ledger()
-        validator_info = {'Main' : main_dict, 'Ledger' : self.ledger}
-        self.block_tree = Block_tree(validator_info)
+        file_name=str(self.u)+'_'+str("persistent_ledger_file.txt")
+
+        self.mempool = Mempool()
+        #self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,{})
+        self.ledger = Ledger(defaultdict(),defaultdict(),OrderedDict(),file_name,set())
+        self.block_tree = Block_tree({},{},None,None,self.faulty_validators)
+        self.safety = Safety(self._signature_dict['private_key'],self._signature_dict['validators_public_key'],-1,-1,-1)
+        self.pacemaker = Pacemaker(0,None,{},{},self.faulty_validators,self.delta_for_pacemaker)
+        self.leader_election = Leader_election()
+
+        validator_info={}
+
+        validator_info['Main'] = main_dict
+        validator_info['Mempool'] = self.mempool
+        validator_info['Ledger'] = self.ledger
         validator_info['BlockTree'] = self.block_tree
-        self.safety = Safety('private_keys','public_keys',-1,-1,-1,validator_info)
-
         validator_info['Safety'] = self.safety
-        self.pacemaker = Pacemaker(validator_info)
-
-        self.mempool = Mempool(validator_info)
-
         validator_info['validator_dict'] = self._validator_dict # need to verify
         validator_info['Pacemaker']=self.pacemaker
-        self.leader_election = Leader_election(validator_info)
+
+        self.mempool.setValidator_info(validator_info);
+        self.ledger.setValidator_info(validator_info);
+        self.block_tree.setValidator_info(validator_info);
+        self.safety.setValidator_info(validator_info);
+        self.pacemaker.setValidator_info(validator_info);
+        self.leader_election.setValidator_info(validator_info);
         self.run_done = False
 
     def run():
 
-        if self.u=="v4":
-            while not self.run_done:
-                round_done = False
-                timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
-                if await(round_done):
-                    pass
-                elif timeout(timer_duration) :
-                    output('TIMER TIMER TIMER TIMER')
-                    timeout_message = self.pacemaker.local_timeout_round()
-                    send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
-                    self.run_done=True
-                    break
+        while not self.run_done:
+            self.run_done = False
+            timer_duration = self.pacemaker.get_round_timer(self.pacemaker.current_round)
+            if await(len(self.client_results) > 0):
 
-        await(False)
+                for cmd in self.client_results.keys():
+                    signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+                    send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
+                self.client_results.clear()
+                self.run_done=False
+            elif timeout(timer_duration) :
+                timeout_message = self.pacemaker.local_timeout_round()
+                #verify timeout msg
+                #let define timeoutmsg and uncomment this and below lines
+                # if self.verifySignature(timeout_message.tmo_info.sender,timeout_message.tmo_info.signature,str(str(timeout_message.tmo_info.block_round) + high_qc_sign).encode('utf-8')):
+
+                send(('TIMEOUT_MESSAGE', (self.u,timeout_message)), to=list(self._validator_dict.values()))
+                #break
+
+        await(self.pacemaker.current_round > (len(self.client_dict.keys())*self.client_NOPS))
+
 
     def receive(msg=('CLIENT_REQUEST', request)):
-        client, cmd, cid = request
-        #output("CLIENT_REQUEST RECEIVED - " + str(client) + str(cid))
-        self.process_new_round_event(None,client,cmd)
+
+        client, cmd, signature = request
+        if self.verifySignature(client,signature,str(cmd).encode('utf-8'),True)== False:
+            return
+
+        if cmd in self.results.keys():
+            curr_client = self.get_client(cmd)
+            #output(' RESULT IN CACHE FOR COMMAND - ', cmd)
+            signature=self._signature_dict["private_key"].sign("SUCCESS".encode('utf-8'))
+            send(('RESULT_RESPONSE',(self.u, cmd,"SUCCESS", signature)), to=self.get_client(cmd))
+            return
+
+        self.mempool.add_transaction(cmd,"PENDING")
+        #print(self.u,cmd," LAST ROUND TC ",self.pacemaker.last_round_tc, ' LEADER - ', self.leader_election.get_leader(self.pacemaker.current_round))
+        self.process_new_round_event(self.pacemaker.last_round_tc,client,cmd)
+
 
     def receive(msg=('PROPOSAL_MESSAGE', m)):
+        client, proposal_msg,author_of_proposal = m
+        #if (self.u == "v1" or self.u == "v2" or  self.u == "v4") and self.pacemaker.current_round==1 and proposal_msg.last_round_tc is None:
+        #    time.sleep(3)
+        #    return
+        if self._timeoutWorkloadInfo is not None and self.u in self._timeoutWorkloadInfo["validators_getting_timeouts"] and  self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] and proposal_msg.last_round_tc is None:
+            time.sleep(self._timeoutWorkloadInfo["timeout_duration"])
+            return
+        self.process_proposal_msg(client, proposal_msg,author_of_proposal)
 
-        client, proposal_msg = m
-        output("SELF ", self.u, "PROPOSAL_MESSAGE RECEIVED FROM - ", proposal_msg.sender, " FOR ROUND ", proposal_msg.block.round)
-        if self.u == 'v4':
-            output("TIMING OUT V4 ")
-            time.sleep(3)
-
-        # if self.u != self.leader_election.get_leader(self.pacemaker.current_round):  need to verify
-        # to do : how to handle duplicate msg
-        if self.u == 'v4':
-            print("********* SLEEP KE NICHE IN V4")
-        self.process_proposal_msg(client, proposal_msg)
 
 
     def receive(msg=('VOTE_MESSAGE',m)):
         validator_id, vote_msg = m
-        output("SELF ",self.u, "VOTE_MESSAGE RECEIVED FROM VALIDATOR ", validator_id,"FOR ROUND",vote_msg.vote_info.round)
         self.process_vote_msg(validator_id, vote_msg)
+
 
     def receive(msg=('TIMEOUT_MESSAGE',m)):
 
         validator_id, timeout_msg = m
-        output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info.sender, " --- ", timeout_msg.tmo_info.block_round)
-        #self.process_timeout_msg(timeout_msg)
+        #if self.pacemaker.current_round==1:
+        if  self._timeoutWorkloadInfo is not None and self.pacemaker.current_round in self._timeoutWorkloadInfo["timeouts_rounds_list"] :
+            output("SELF ", self.u, "TIMEOUT_MESSAGE RECEIVED.", timeout_msg.tmo_info, " --- ", timeout_msg.tmo_info.block_round)
+
+
+            if timeout_msg is not None and timeout_msg.tmo_info is not None and timeout_msg.tmo_info.high_qc is None:
+                high_qc_sign = 'None'
+                if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
+                    return
+            elif timeout_msg is not None and timeout_msg.tmo_info is not None and timeout_msg.tmo_info.high_qc is not None:
+                qc_round = timeout_msg.tmo_info.high_qc.vote_info.round
+                high_qc_sign = str(timeout_msg.tmo_info.high_qc.vote_info.round)
+                if self.verifySignature(timeout_msg.tmo_info.sender,timeout_msg.tmo_info.signature,str(str(timeout_msg.tmo_info.block_round) + high_qc_sign).encode('utf-8'))== False:
+                    return
+
+
+
+
+
+            self.process_timeout_msg(timeout_msg)
+
+    def get_client(cmd):
+        cmd = cmd.replace(" ", "")
+        client_id = cmd.split("-")[0]
+        return self.client_dict[client_id]
 
     def process_vote_msg(validator_id,M): #Function def changed to include validator_id
-        # add code for decrypting votemsg info (check page no 10)
+
+        #check sign here
+
+
+        if self.verifySignature(M.sender,M.signature,str(str(M.ledger_commit_info.commit_state_id)+str(M.ledger_commit_info.vote_info_hash)).encode('utf-8'))== False:
+            return
         self.qc = self.block_tree.process_vote(M)
-        ###Saurabh : Should we not broadcast qc so that everyone updates the qc
         if self.qc is not None:
             self.process_certificate_qc(self.qc)
-            self.process_new_round_event(None, None, None) #verify the arguments
-        #print("DONE Process Vote",validator_id," SELF ",self.u)
+            self.process_new_round_event(self.pacemaker.last_round_tc, None, None)
 
     def process_timeout_msg(M):
         #add code for decrypting timeout info (check page no 12)
@@ -111,27 +178,45 @@ class Validator(process):
         self.process_certificate_qc(M.high_commit_qc)
         self.pacemaker.advance_round_tc(M.last_round_tc)
         self.tc = self.pacemaker.process_remote_timeout(M)
+
         if self.tc is not None:
+            output(' TC CREATED', self.u)
             self.pacemaker.advance_round_tc(self.tc) # need to verify
-            self.process_new_round_event(self.tc)
+            self.process_new_round_event(self.tc,None,None)
 
     # v3 ne bheja none none for qc of qc
     def process_new_round_event(last_tc,client,M):  #Function def changed to include client
+
         if M is None or self.u == self.leader_election.get_leader(self.pacemaker.current_round):
-            #add to mempool
-            self.mempool.add_transaction(M,"PENDING")
-            self.b = self.block_tree.generate_block(self.mempool.get_transactions(), self.pacemaker.current_round)
+            #print(self.u," ", self.pacemaker.current_round, " Transactions while creating block",self.mempool.get_transactions())
+
+            block=None
+            if M is not None:
+                transaction=self.mempool.get_transactions()
+                for t in transaction:
+                    self.mempool.update_transaction(t,"PROCESSING")
+                block = self.block_tree.generate_block(transaction, self.pacemaker.current_round)
+            else:
+                block = self.block_tree.generate_block([], self.pacemaker.current_round)
+
             # TO DO broadcast
-            p = ProposalMessage(self.b, last_tc, self.block_tree.high_commit_qc, self.u)
+            signature=self._signature_dict["private_key"].sign(str(block.id).encode('utf-8'))
+            #print(block.id,":PROPOSAL signature",signature)
+            p = ProposalMessage(block, last_tc, self.block_tree.high_commit_qc, signature)
+            #print("author_of_proposal ",self.u, "P.signature ",p.signature)
+
+            returnKeys=[]
             if M is None:
                 sender_list=[]
                 for k,v in self._validator_dict.items():
                     if k != self.u:
                         sender_list.append(v)
-                print('LIST OF RECEIVERS OF EMPTY BLOCK - ', sender_list)
-                send(('PROPOSAL_MESSAGE', (client, p)), to=sender_list)
+                        returnKeys.append(k)
+                send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=sender_list)
             else:
-                send(('PROPOSAL_MESSAGE', (client, p)), to=list(self._validator_dict.values()))
+                send(('PROPOSAL_MESSAGE', (client, p,self.u)), to=list(self._validator_dict.values()))
+
+
 
     def verify_signatures(block):
         hash_of_current_block=hash(block.author,block.block_round,block.payload,block.qc.vote_info.id,block.qc.signatures)
@@ -139,39 +224,78 @@ class Validator(process):
             return True
         return False
 
+    def generateSignRecur(signatures_list):
+        hash_of_all_sign=''
+        for i in range(0,len(signatures_list)):
+            hash_of_all_sign=str(hash(str(hash(signatures_list[i]))+hash_of_all_sign))
 
-    def process_proposal_msg(client, P): #Function def changed to include client
+        return hash_of_all_sign
 
-        #self.verify_signatures(P.block) #need to verify
+    def process_proposal_msg(client, P,author_of_proposal): #Function def changed to include client
+
+        if self.verifySignature(author_of_proposal,P.signature,str(P.block.id).encode('utf-8'))==False:
+            return
+        if client is None or P.block.payload is None:
+            #check qc sign
+            signatures_list=P.block.qc.signatures
+            if self.verifySignature(P.block.qc.author,P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))==False:
+                return
+
+
+        #if P is not None and P.block.payload is not None:
+        #    output(' BLOCK PAYLOAD FOR c1-4', P.block.payload)
 
         self.process_certificate_qc(P.block.qc)
-        self.process_certificate_qc(P.high_commit_qc)
 
+        self.process_certificate_qc(P.high_commit_qc)
         self.pacemaker.advance_round_tc(P.last_round_tc)
 
-        ###Saurabh: Should we broadcast current Round so that everyone is on same round
         self.round = self.pacemaker.current_round
-
         self.leader = self.leader_election.get_leader(self.round) # need to verify
 
-        if P.block.payload is None:
-            output('SELF ', self.u, ' FINAL LEDGER STATE ', self.ledger.persistent_ledger_states)
-
+        if client is None or P.block.payload is None:
+            self.run_done = True
             return
-        if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+
+        #if P.block.round != self.round and P.sender != self.leader and P.block.author != self.leader:
+        #    return
+
+        if P.block.round != self.round and author_of_proposal != self.leader and P.block.author != self.leader:
             return
 
         self.block_tree.execute_and_insert(P.block)
         self.vote_msg = self.safety.make_vote(P.block, P.last_round_tc)
 
         if self.vote_msg is not None:
-            #distAlgo: send vote msg to leader of the next round
+            for t in P.block.payload:
+                self.mempool.update_transaction(t,"PROCESSING")
+
             send(('VOTE_MESSAGE', (self.u, self.vote_msg)), to=self._validator_dict[self.leader_election.get_leader(self.round+1)]) # need to verify
 
 
     def process_certificate_qc(qc):
+
         self.block_tree.process_qc(qc)     #do we need to broadcast the updated qc
         self.leader_election.update_leaders(qc) #do we need to broadcast the updated leader
         if qc is not None:
             self.pacemaker.advance_round_qc(qc)#need to verify
+
+
+    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg,client=False):
+        #check sign here
+        if client==False:
+            verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self._signature_dict["clients_public_key"][sender])
+        try:
+            verify_key.verify(signed_msg)
+        except:
+            print("Signature was forged or corrupt in vote msg sent by",sender)
+            #think what has to be done (wait timeout
+            return
+
+        if signed_msg.message!=generated_hexcode_signed_msg:
+            print("Packet  content was forged or corrupt sent by",sender)
+
+
 
