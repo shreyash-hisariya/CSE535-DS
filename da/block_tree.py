@@ -43,7 +43,8 @@ class Block_tree:
         if qc is not None:
 
             signatures_list = qc.signatures
-            #self.verifySignature(P.block.qc.author, P.block.qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8'))
+            if self.verifySignature(qc.author,qc.author_signature,self.generateSignRecur(signatures_list).encode('utf-8')) ==False:
+                return False
 
         if qc is not None and qc.ledger_commit_info.commit_state_id!=-1:  # [-1, []]
             ###shreyas: need to revisit
@@ -76,7 +77,8 @@ class Block_tree:
     def process_vote(self,v):
 
 
-        self.process_qc(v.high_commit_qc)
+        if self.process_qc(v.high_commit_qc) == False:
+            return None
 
         vote_idx = self.hash(v.ledger_commit_info.commit_state_id,v.ledger_commit_info.vote_info_hash)
 
@@ -163,15 +165,22 @@ class Block_tree:
             if ledger_id in self.validator_info["Ledger"].pending_ledger_states:
                 del self.validator_info["Ledger"].pending_ledger_states[ledger_id]
 
-    def verifySignature(sender,signed_msg,generated_hexcode_signed_msg):
+    def verifySignature(self,sender,signed_msg,generated_hexcode_signed_msg,client=False):
         #check sign here
-        verify_key = VerifyKey(self._signature_dict["validators_public_key"][sender])
+        if client==False:
+            verify_key = VerifyKey(self.validator_info["Main"]["signature_dict"]["validators_public_key"][sender])
+        else:
+            verify_key = VerifyKey(self.validator_info["Main"]["signature_dict"]["clients_public_key"][sender])
+
         try:
             verify_key.verify(signed_msg)
         except:
             print("Signature was forged or corrupt in vote msg sent by",sender)
             #think what has to be done (wait timeout
-            return
+            return False
 
-        if signed.message!=generated_hexcode_signed_msg:
+        if signed_msg.message!=generated_hexcode_signed_msg:
             print("Packet  content was forged or corrupt sent by",sender)
+            return False
+
+        return True

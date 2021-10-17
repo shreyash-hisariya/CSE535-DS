@@ -1,4 +1,0 @@
-
-New Commit: v4 ledger_state_id: 3681777394038481914 block_id: -7053308013674206027 Transaction: ['c1 - 0']
-New Commit: v4 ledger_state_id: 1600764420337240852 block_id: -5193404201208062396 Transaction: ['c1 - 1', 'c1 - 2']
-New Commit: v4 ledger_state_id: 173394720796420407 block_id: -2661042861679631006 Transaction: ['c1 - 3', 'c1 - 4']
