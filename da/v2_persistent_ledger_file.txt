@@ -967,3 +967,15 @@ New Commit: v2 ledger_state_id: -1465359639200908194 block_id: 71899190303714228
 New Commit: v2 ledger_state_id: -3795422124657900554 block_id: 2764822669029579462 Transaction: ['c1 - 2', 'c1 - 3']
 New Commit: v2 ledger_state_id: 5979213660372750323 block_id: 8552466124177644407 Transaction: ['c2 - 3', 'c2 - 4']
 New Commit: v2 ledger_state_id: -5643862947298950181 block_id: 7913692284821044865 Transaction: ['c1 - 4']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+New Commit: v2 ledger_state_id: 7846857969230561728 block_id: 2820654785941929639 Transaction: ['c2 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 
+
+ 
+ TEST CASE 1 : One Client - 1 Command (GENESIS) 
+ 

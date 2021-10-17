@@ -117,7 +117,7 @@ class Client(process):
         f.write(msg)
         f.close()
 
-class Test(process):
+class Runner(process):
 
     def setup(config):
         self.config=config
@@ -216,11 +216,11 @@ class Test(process):
 
 def main():
 
-    with open('config.json',encoding='utf-8-sig') as f:
+    with open('workload_configuration.json',encoding='utf-8-sig') as f:
         config = json.load(f)
 
     for i in range(len(config)):
-        t=new(Test)
+        t=new(Runner)
         setup(t, (config[i],))
         start(t)
         await(received(('done',), from_=t))

@@ -20,3 +20,13 @@
 [INFO]: 2021-10-17 21:33:47   		 [ Client: c1 received result for the command from the validator v2 for  command c1 - 2 ]
 [INFO]: 2021-10-17 21:33:47   		 [ Client: c1 received result for the command from the validator v2 for  command c1 - 3 ]
 [INFO]: 2021-10-17 21:33:47   		 [ Client: c1 received result for the command from the validator v4 for  command c1 - 4 ]
+######################## Logger for Client: c1 ######################## 
+
+[INFO]: 2021-10-17 21:39:59   		 [ Client: c1 sending request to all the validators ]
+[INFO]: 2021-10-17 21:40:01   		 [ Client: c1 sending request to all the validators ]
+######################## Logger for Client: c1 ######################## 
+
+[INFO]: 2021-10-17 21:40:35   		 [ Client: c1 sending request to all the validators ]
+######################## Logger for Client: c1 ######################## 
+
+[INFO]: 2021-10-17 21:41:03   		 [ Client: c1 sending request to all the validators ]

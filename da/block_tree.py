@@ -99,7 +99,7 @@ class Block_tree:
         else:
             self.pending_votes[vote_idx] = [v.signature]
 
-        if len(self.pending_votes[vote_idx]) >= (2 * self.faulty_validators) + 1: #3 (2*f)+1: # need to set f from config.json
+        if len(self.pending_votes[vote_idx]) >= (2 * self.faulty_validators) + 1: #3 (2*f)+1: # need to set f from workload_configuration.json
 
             signatures_list=list(self.pending_votes[vote_idx])
 
