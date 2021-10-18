@@ -1,1 +1,0 @@
-transactions = set() #this will be filled when a validator is initialized via runner

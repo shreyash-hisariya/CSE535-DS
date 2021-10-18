@@ -3,6 +3,16 @@
 from Models.block import Block
 from Models.qc import QC
 from nacl.signing import VerifyKey
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
 #       'Main' : {main variables}
@@ -89,7 +99,7 @@ class Block_tree:
         else:
             self.pending_votes[vote_idx] = [v.signature]
 
-        if len(self.pending_votes[vote_idx]) >= (2 * self.faulty_validators) + 1: #3 (2*f)+1: # need to set f from config.json
+        if len(self.pending_votes[vote_idx]) >= (2 * self.faulty_validators) + 1: #3 (2*f)+1: # need to set f from workload_configuration.json
 
             signatures_list=list(self.pending_votes[vote_idx])
 
@@ -100,6 +110,8 @@ class Block_tree:
             # if self.high_qc is not None:
             #     self.high_commit_qc=self.high_qc
             # self.high_qc=new_qc
+
+            self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + " created QC message"),LoggingLevel.INFO)
             return new_qc
        # print("waah ji waah qc nhi bana kynki consensus nhi mila",self.high_qc)
         return None
@@ -186,3 +198,9 @@ class Block_tree:
             return False
 
         return True
+
+    def logToFile(self,msg, level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" + level.name + "]: " + strftime("%Y-%m-%d %H:%M:%S ", gmtime()) + "  \t\t " + "[ " + msg + " ]\n"
+        f.write(msg)
+        f.close()

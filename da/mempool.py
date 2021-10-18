@@ -1,5 +1,15 @@
 from collections import defaultdict
 from collections import OrderedDict
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 #Not needed here
 #validator_info  : consists of all the items which we  were accessing via Main.initializer
 # validator_info {
@@ -25,6 +35,7 @@ class Mempool:
     def add_transaction(self,M,state):
         if M is None:
             return
+        self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + " adding transaction: " + M),LoggingLevel.INFO)
 
         self.transactions[M]=state
         #print(self.validator_info["Main"]["u"]," STATE 1: ", M, " ", self.transactions)
@@ -34,3 +45,8 @@ class Mempool:
             self.transactions[M] = state
             #print(self.validator_info["Main"]["u"]," STATE 2: ", str(M), " ", self.transactions)
 
+    def logToFile(self,msg, level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" + level.name + "]: " + strftime("%Y-%m-%d %H:%M:%S ", gmtime()) + "  \t\t " + "[ " + msg + " ]\n"
+        f.write(msg)
+        f.close()

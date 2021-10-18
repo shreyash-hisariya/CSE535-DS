@@ -8,6 +8,16 @@ from Models.vote_info import VoteInfo
 from Models.ledger_commit_info import LedgerCommitInfo
 from Models.vote_msg import VoteMsg
 from Models.timeout_info import TimeoutInfo
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 
 
 class Safety:
@@ -109,6 +119,8 @@ class Safety:
 
             #signature = str(ledger_commit_info)  # done
             signature = self.private_key.sign(str(str(ledger_commit_info.commit_state_id)+str(ledger_commit_info.vote_info_hash)).encode('utf-8'))
+            self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + "created Votemsg : "),LoggingLevel.INFO)
+
             return VoteMsg(vote_info, ledger_commit_info, self.validator_info["BlockTree"].high_commit_qc,
                            self.validator_info["Main"]["u"], signature)
         return None
@@ -131,3 +143,9 @@ class Safety:
 
             return TimeoutInfo(round, high_qc, self.validator_info["Main"]["u"], signature)
         return None
+
+    def logToFile(self,msg, level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" + level.name + "]: " + strftime("%Y-%m-%d %H:%M:%S ", gmtime()) + "  \t\t " + "[ " + msg + " ]\n"
+        f.write(msg)
+        f.close()

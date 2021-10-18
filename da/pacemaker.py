@@ -5,16 +5,27 @@
 # }
 from Models.timeout_msg import TimeoutMsg
 from Models.timeout_certificate import TimeoutCertificate
+from time import gmtime, strftime
+
+import enum
+class LoggingLevel(enum.Enum):
+    NOTSET=0
+    DEBUG=1
+    INFO=2
+    WARNING=3
+    ERROR=4
+    CRITICAL=5
 
 
 class Pacemaker:
-    def __init__(self, current_round,last_round_tc,pending_timeouts,pending_timeouts_senders,faulty_validators,delta_for_pacemaker,validator_info=None):
+    def __init__(self, current_round,last_round_tc,pending_timeouts,pending_timeouts_senders,faulty_validators,delta_for_pacemaker,timeout_validators, validator_info=None):
         self.validator_info = validator_info
         self.current_round = current_round#0
         self.last_round_tc = last_round_tc#None
         self.pending_timeouts = pending_timeouts#{}  # dictionary of set (key:round,value:set of tmo_info  getting timed_out) : may have to verify
         self.pending_timeouts_senders = pending_timeouts_senders#{}  # extra dictionary of set (key:round,value:set of tmo_info.senders  getting timed_out) : may have to verify
         self.faulty_validators=faulty_validators
+        self.timeout_validators = timeout_validators
         self.delta_for_pacemaker=delta_for_pacemaker
 
     def setValidator_info(self,validator_info):
@@ -68,6 +79,9 @@ class Pacemaker:
             high_qc_rounds_vector = [tmo_info.high_qc.vote_info.round for tmo_info in
                                      self.pending_timeouts[tmo_info.block_round] if tmo_info.high_qc is not None  ]
             signature_list = [tmo_info.signature for tmo_info in self.pending_timeouts[tmo_info.block_round]]
+            if len(self.timeout_validators) > 0:
+                self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + "created Timeout Message: "),LoggingLevel.INFO)
+
             # print(high_qc_rounds_vector)
 #            print("******** process_timeout_msg", self.pending_timeouts_senders[tmo_info.block_round])
             return TimeoutCertificate(tmo_info.block_round, high_qc_rounds_vector, signature_list)
@@ -103,3 +117,9 @@ class Pacemaker:
     def stop_timer(self, round):
         # distAlgo:
         pass
+
+    def logToFile(self,msg,level):
+        f = open(self.validator_info["Main"]["logger_file"], "a")
+        msg = "[" +level.name+"]: " +strftime("%Y-%m-%d %H:%M:%S ", gmtime())+"  \t\t "+ "[ "+ msg + " ]\n"
+        f.write(msg)
+        f.close()
