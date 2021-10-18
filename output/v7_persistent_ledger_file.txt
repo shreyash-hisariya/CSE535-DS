@@ -3,6 +3,6 @@
  TEST CASE 6 : 2 Clients - 2 Command. Number of validators - 7 
  
 
-New Commit: v7 ledger_state_id: 3648831202768309571 block_id: 3551062700183918890 Transaction: ['c1 - 0']
-New Commit: v7 ledger_state_id: -4644506386732392376 block_id: 8536611554685991995 Transaction: ['c2 - 0', 'c1 - 1']
-New Commit: v7 ledger_state_id: -3202244132108893787 block_id: 8210861253289208018 Transaction: ['c2 - 1']
+New Commit: v7 ledger_state_id: 1669265016665712858 block_id: -6013239465875322832 Transaction: ['c2 - 0']
+New Commit: v7 ledger_state_id: 8768902575249135756 block_id: -6719119413911806080 Transaction: ['c1 - 0', 'c2 - 1']
+New Commit: v7 ledger_state_id: -7897476260824941959 block_id: 8840832929504265040 Transaction: ['c1 - 1']
