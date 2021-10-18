@@ -28,15 +28,9 @@ class Ledger:
 
         self.persistent_ledger_tracker = persistent_ledger_tracker
 
-        #self.committed_block_map=committed_block_map#{} key blockId, value=block
-
     def setValidator_info(self,validator_info):
         self.validator_info = validator_info
         self.clear_file()
-
-    #def addToCommitedBlock(self,block):
-    #    self.committed_block_map[block.id]=block
-
 
     def speculate(self, prev_block_id, block_id, txns):
         # hashing to create the ledger state id.
@@ -45,7 +39,6 @@ class Ledger:
         else:
             ledger_state_id = str(self.blockid_ledger_map[prev_block_id]) + str(txns)
 
-        #ledger state hash karna hai
         ledger_state_id=hash(ledger_state_id)
         self.blockid_ledger_map[block_id] = ledger_state_id
         self.pending_ledger_states[ledger_state_id] = [block_id, txns]
@@ -55,9 +48,6 @@ class Ledger:
             return self.blockid_ledger_map[block_id]  # need to verify
 
     def commit(self, block_id):
-        # add persistent_ledger_states to disk
-
-
         if block_id in self.blockid_ledger_map and self.blockid_ledger_map[block_id] in  self.pending_ledger_states:
 
             self.persistent_ledger_states[self.blockid_ledger_map[block_id]] = self.pending_ledger_states[self.blockid_ledger_map[block_id]]
@@ -75,14 +65,8 @@ class Ledger:
 
     def committed_block(self, block_id):
 
-        # if block_id in self.committed_block_map:
-        #     return self.committed_block_map[block_id]
         if block_id in self.validator_info["BlockTree"].pending_block_tree:
             return self.validator_info["BlockTree"].pending_block_tree[block_id]
-        #[block_id, txns]
-        # if block_id in self.blockid_ledger_map and self.blockid_ledger_map[block_id] in self.persistent_ledger_states:
-        #     return self.persistent_ledger_states[self.blockid_ledger_map[block_id]][0]
-        #
 
     def clear_file(self):
         f = open(self.persistent_ledger_file,"a")

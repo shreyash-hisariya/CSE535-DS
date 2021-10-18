@@ -35,43 +35,39 @@ class Safety:
     def valid_signatures(self, high_qc, last_tc):
         return True
 
-    def increase_highest_vote_round(self, round):
+    def _increase_highest_vote_round(self, round):
 
         self.highest_vote_round = max(round, self.highest_vote_round)
 
-    def update_highest_qc_round(self, qc_round):
+    def _update_highest_qc_round(self, qc_round):
         self.highest_qc_round = max(qc_round, self.highest_qc_round)
 
-    def consecutive(self, block_round, qc_round):
+    def _consecutive(self, block_round, qc_round):
         return (qc_round + 1) == block_round
 
-    def safe_to_extend(self, block_round, qc_round, tc):
+    def _safe_to_extend(self, block_round, qc_round, tc):
         if tc is None:
             return True
-        return self.consecutive(block_round, tc.block_round) and qc_round >= max(tc.tmo_high_qc_rounds)
+        return self._consecutive(block_round, tc.block_round) and qc_round >= max(tc.tmo_high_qc_rounds)
 
-    def safe_to_vote(self, block_round, qc_round, tc):
+    def _safe_to_vote(self, block_round, qc_round, tc):
 
         if block_round <= max(self.highest_vote_round, qc_round):
             return False
+        return self._consecutive(block_round, qc_round) or self._safe_to_extend(block_round, qc_round, tc)
 
-
-        return self.consecutive(block_round, qc_round) or self.safe_to_extend(block_round, qc_round, tc)
-
-# 0 -1 None
-    def safe_to_timeout(self, round, qc_round, tc):
-        #print(round, qc_round, self.highest_vote_round)
+    def _safe_to_timeout(self, round, qc_round, tc):
         if qc_round < self.highest_vote_round or round <= max(self.highest_vote_round - 1, qc_round):
             return False
-        #print('kashfklashfklhasklfhklashfklashfklahs')
-        if tc is None:
-            return self.consecutive(round, qc_round)
-        return self.consecutive(round, qc_round) or self.consecutive(round, tc.round) # handle tc none
 
-    def commit_state_id_candidate(self, block_round, qc):
+        if tc is None:
+            return self._consecutive(round, qc_round)
+        return self._consecutive(round, qc_round) or self._consecutive(round, tc.round) # handle tc none
+
+    def _commit_state_id_candidate(self, block_round, qc):
         if qc is None:
             return -1  # need to verify
-        elif self.consecutive(block_round, qc.vote_info.round):
+        elif self._consecutive(block_round, qc.vote_info.round):
             return self.validator_info["Ledger"].pending_state(qc.vote_info.id)  # need to verify
         else:
             return None
@@ -82,17 +78,15 @@ class Safety:
     def make_vote(self, b, last_tc):
 
         if b.qc is None:
-            self.qc_round = -1  # need to verify
+            self.qc_round = -1
         else:
             self.qc_round = b.qc.vote_info.round
 
 
-        if self.valid_signatures(b, last_tc) and self.safe_to_vote(b.round, self.qc_round, last_tc):
-            # print('OLD ROUND = ', self.qc_round)
+        if self.valid_signatures(b, last_tc) and self._safe_to_vote(b.round, self.qc_round, last_tc):
 
-            self.update_highest_qc_round(self.qc_round)
-            ###Saurabh: Why next line?
-            self.increase_highest_vote_round(b.round)
+            self._update_highest_qc_round(self.qc_round)
+            self._increase_highest_vote_round(b.round)
 
             if b.qc is None:
                 vote_info = VoteInfo(b.id, b.round, -1, self.qc_round,
@@ -108,16 +102,14 @@ class Safety:
                                                 self.validator_info["Ledger"].pending_state(b.id))
 
 
-            # TO DO hashing part.
-            if b.qc is not None:  # need to verify this
+            if b.qc is not None:
 
-                ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, b.qc),
-                                                      hash_vote_info)  # need to verify for -1
+                ledger_commit_info = LedgerCommitInfo(self._commit_state_id_candidate(b.round, b.qc),
+                                                      hash_vote_info)
             else:
-                ledger_commit_info = LedgerCommitInfo(self.commit_state_id_candidate(b.round, None), hash_vote_info)
+                ledger_commit_info = LedgerCommitInfo(self._commit_state_id_candidate(b.round, None), hash_vote_info)
 
 
-            #signature = str(ledger_commit_info)  # done
             signature = self.private_key.sign(str(str(ledger_commit_info.commit_state_id)+str(ledger_commit_info.vote_info_hash)).encode('utf-8'))
             self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + "created Votemsg : "),LoggingLevel.INFO)
 
@@ -133,12 +125,10 @@ class Safety:
         else:
             self.qc_round = high_qc.vote_info.round
             high_qc_sign = str(high_qc.vote_info.round)
-        # TO DO validation of signatures
 
-        if self.valid_signatures(high_qc, last_tc) and self.safe_to_timeout(round, self.qc_round, last_tc):
+        if self.valid_signatures(high_qc, last_tc) and self._safe_to_timeout(round, self.qc_round, last_tc):
 
-            self.increase_highest_vote_round(round)
-            #signature = str(round) + high_qc_sign
+            self._increase_highest_vote_round(round)
             signature = self.validator_info["Main"]["signature_dict"]["private_key"].sign(str(str(round) + high_qc_sign).encode('utf-8'))
 
             return TimeoutInfo(round, high_qc, self.validator_info["Main"]["u"], signature)

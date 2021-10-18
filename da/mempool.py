@@ -38,12 +38,11 @@ class Mempool:
         self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + " adding transaction: " + M),LoggingLevel.INFO)
 
         self.transactions[M]=state
-        #print(self.validator_info["Main"]["u"]," STATE 1: ", M, " ", self.transactions)
 
     def update_transaction(self, M, state):
         if M in self.transactions:
             self.transactions[M] = state
-            #print(self.validator_info["Main"]["u"]," STATE 2: ", str(M), " ", self.transactions)
+
 
     def logToFile(self,msg, level):
         f = open(self.validator_info["Main"]["logger_file"], "a")

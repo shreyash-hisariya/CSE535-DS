@@ -37,10 +37,11 @@ class Pacemaker:
     def start_timer(self, new_round):
         self.stop_timer(self.current_round)
         self.current_round = new_round
+        # handled in main run
         # distAlgo: start timer for this current_round for duration=get_round_timer(initializer.current_round)
 
     def save_consensus_state(self):
-        # doubt
+        # As per professor
         pass
 
     def local_timeout_round(self):
@@ -49,7 +50,6 @@ class Pacemaker:
         timeout_info = self.validator_info["Safety"].make_timeout(self.current_round,
                                                                   self.validator_info["BlockTree"].high_qc,
                                                                   self.last_round_tc)
-        # to do broadCast Timeout_Message()
 
         timeout_message = TimeoutMsg(timeout_info, self.last_round_tc, self.validator_info["BlockTree"].high_commit_qc)
         return timeout_message
@@ -82,12 +82,9 @@ class Pacemaker:
             if len(self.timeout_validators) > 0:
                 self.logToFile(str("Validator: " + self.validator_info["Main"]["u"] + "created Timeout Message: "),LoggingLevel.INFO)
 
-            # print(high_qc_rounds_vector)
-#            print("******** process_timeout_msg", self.pending_timeouts_senders[tmo_info.block_round])
             return TimeoutCertificate(tmo_info.block_round, high_qc_rounds_vector, signature_list)
 
         return None
-        # if(tmo_info.sender)
 
     def advance_round_tc(self, tc):
 
@@ -95,27 +92,21 @@ class Pacemaker:
             return False
 
         self.last_round_tc = tc
-
-        ###Saurabh: tc.round + 1 or current_round+1
         self.start_timer(tc.block_round + 1)
         return True
 
     def advance_round_qc(self, qc):
 
         if qc is None or qc.vote_info.round < self.current_round:
-            # print("In advance_round_qc: return")
             return False
 
-
-        # if a validator is lagging, then the following code advances it to the current round
         self.last_round_tc = None
 
-        ### thinking: increase the pacemaker round and broadcast
         self.start_timer(qc.vote_info.round + 1)
         return True
 
     def stop_timer(self, round):
-        # distAlgo:
+        # handled in main run
         pass
 
     def logToFile(self,msg,level):

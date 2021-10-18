@@ -68,6 +68,20 @@ Python files and models
 
 # Code size
 
+<img width="658" alt="Screenshot 2021-10-17 at 10 56 35 PM" src="https://user-images.githubusercontent.com/8944710/137662326-5505465e-5477-41cd-9fbc-3ab91658404f.png">
+
+1. Number of non-blank non-comment lines of code (LOC) in your system in the following categories: 
+- algorithm : 772
+- other : 312
+- total : 1084
+
+
+2. How you obtained the counts 
+- I use CLOC https://github.com/AlDanial/cloc
+
+3. give a rough estimate of how much of the "algorithm" code is for the algorithm itself, and how much is for other functionality interleaved with it.
+- The algorithm code is roughly 73.15 percent of the entire code.
+
 # Language feature usage
 - list comprehensions - 20
 - dictionary comprehensions - 10

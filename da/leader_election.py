@@ -37,7 +37,7 @@ class Leader_election:
         i = 0
         while i < self.window_size or len(last_authors) < self.exclude_size:
             current_block = self.validator_info["Ledger"].committed_block(current_qc.vote_info.parent_id)
-            #print('DHDKAHDKHAKDHAKDHKADHKADHKAHDKAH', current_block)
+
             block_author = current_block.author
 
             if i < self.window_size:
@@ -60,16 +60,13 @@ class Leader_election:
 
     def update_leaders(self, qc):
 
-        #return
         if qc is None:
-            # print("return from update_leaders as qc is None")
             return
         extended_round = qc.vote_info.parent_round
         qc_round = qc.vote_info.round
         current_round = self.validator_info["Pacemaker"].current_round
         if extended_round == -1:
             return
-        # shreyas: every replica should be in some consesus
 
         if extended_round + 1 == qc_round and qc_round + 1 == current_round:
 
@@ -81,18 +78,15 @@ class Leader_election:
                 if candidate != -1:
                     self.reputation_leaders[current_round + 1]=[self.elect_reputation_leader(qc)]
 
-            ###Saurabh: self.reputation_leaders[current_round + 1] needs to be list or a single value
-            ###Saurabh: should we broadcast this to everyone so that there is a consensus for the next leader
 
     def get_leader(self, curr_round):
-        ###Saurabh: write algo for selection of self.reputation_leader : taking the first element
+        ###: write algo for selection of self.reputation_leader : taking the first element
         # if curr_round in self.reputation_leaders:
         #     return self.reputation_leaders[curr_round].keys()[0]
 
         return self.round_robin(curr_round)
 
     def round_robin(self, curr_round):
-        # print("Leader as per round robin currentRound",curr_round," ",len(self.validator_info["validator_dict"]))
         return list(self.validator_info["validator_dict"].keys())[
             math.floor(curr_round + 1 / 2) % len(self.validator_info["validator_dict"])]
 
