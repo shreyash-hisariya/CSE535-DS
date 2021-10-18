@@ -51,12 +51,12 @@ Distributed System DiemBFT
 # Main files
 
 JSON files
-1. workload_configuration.json [path to file](https://github.com/shreyash-hisariya/CSE535-DS/blob/main/da/validator.da) - Configuration file containing json objects for all the test cases
+1. workload_configuration.json (/da/workload_configuration.json) - Configuration file containing json objects for all the test cases
 
 DA files
-1. runner.da [path to file](https://github.com/shreyash-hisariya/CSE535-DS/blob/main/da/validator.da) - Loads the workload configuration and initialzed a main process.
-2. main.da [path to file](https://github.com/shreyash-hisariya/CSE535-DS/blob/main/da/validator.da) - Initializes the clients and validators as per the configuration.
-3. validator.da [path to file](https://github.com/shreyash-hisariya/CSE535-DS/blob/main/da/validator.da) - Contains all the primary validator methods
+1. runner.da (/da/runner.da) - Loads the workload configuration and initialzed a main process.
+2. main.da (/da/main.da) - Initializes the clients and validators as per the configuration.
+3. validator.da (/da/validator.da) - Contains all the primary validator methods
 
 Python files and models
 1. block_tree.py
