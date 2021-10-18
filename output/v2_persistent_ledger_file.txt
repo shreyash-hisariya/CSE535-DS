@@ -52,3 +52,100 @@ New Commit: v2 ledger_state_id: -3202244132108893787 block_id: 82108612532892080
 New Commit: v2 ledger_state_id: 3648831202768309571 block_id: 3551062700183918890 Transaction: ['c1 - 0']
 New Commit: v2 ledger_state_id: 826527341169329476 block_id: 1192662038873220488 Transaction: ['c1 - 1']
 New Commit: v2 ledger_state_id: 8754717152894688264 block_id: -6905719681980831954 Transaction: ['c1 - 2']
+ 
+ TEST CASE 1 : One Client - 1 Command 
+ 
+
+New Commit: v2 ledger_state_id: -1866271814964446415 block_id: -8759913396130694047 Transaction: ['c1 - 0']
+ 
+ TEST CASE 2 : One Client - 10 Command 
+ 
+
+New Commit: v2 ledger_state_id: -1866271814964446415 block_id: -8759913396130694047 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: 2300745832307812418 block_id: 8743379134319804597 Transaction: ['c1 - 1']
+New Commit: v2 ledger_state_id: 3479148988419288965 block_id: 2840525152479594856 Transaction: ['c1 - 2']
+New Commit: v2 ledger_state_id: -3157457909342585037 block_id: -813126281290926094 Transaction: ['c1 - 3']
+New Commit: v2 ledger_state_id: 7640259051281671211 block_id: -8213578332892361068 Transaction: ['c1 - 4']
+New Commit: v2 ledger_state_id: -8422604903672168882 block_id: 2828646526022940559 Transaction: ['c1 - 5']
+New Commit: v2 ledger_state_id: 8856317165228874408 block_id: 3073502783622910201 Transaction: ['c1 - 6']
+New Commit: v2 ledger_state_id: -9170387143916691590 block_id: -1683421070704978844 Transaction: ['c1 - 7']
+New Commit: v2 ledger_state_id: -5506663044515348759 block_id: -1314803063543820825 Transaction: ['c1 - 8']
+New Commit: v2 ledger_state_id: 7466071941746881660 block_id: 5889732500243473283 Transaction: ['c1 - 9']
+ 
+ TEST CASE 3 : 3 Clients - 1 Command  
+ 
+
+New Commit: v2 ledger_state_id: -1866271814964446415 block_id: -8759913396130694047 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: 4658877305906147122 block_id: 3128356499584072755 Transaction: ['c2 - 0', 'c3 - 0']
+ 
+ TEST CASE 4 : 3 Client - 3 commands with 1 validator timeout 
+ 
+
+New Commit: v2 ledger_state_id: 7853899835367808047 block_id: -1606030035546045315 Transaction: ['c2 - 0']
+New Commit: v2 ledger_state_id: -2353764641565221498 block_id: -1981917400262050658 Transaction: ['c3 - 0', 'c1 - 0', 'c2 - 1']
+New Commit: v2 ledger_state_id: -4975232428441398965 block_id: 6969052141754651277 Transaction: ['c3 - 1', 'c1 - 1', 'c2 - 2']
+New Commit: v2 ledger_state_id: -3799558248794170560 block_id: -4358525709630403653 Transaction: ['c3 - 2', 'c1 - 2']
+ 
+ TEST CASE 5 : 1 Client - 3 commands with 3 validator timeout. TC is formed 
+ 
+
+New Commit: v2 ledger_state_id: -1866271814964446415 block_id: -8759913396130694047 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -8801948249781852186 block_id: 7214134932064485940 Transaction: ['c1 - 1', 'c1 - 2']
+ 
+ TEST CASE 6 : 2 Clients - 2 Command. Number of validators - 7 
+ 
+
+New Commit: v2 ledger_state_id: -1866271814964446415 block_id: -8759913396130694047 Transaction: ['c1 - 0']
+ 
+ TEST CASE 1 : One Client - 1 Command 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+ 
+ TEST CASE 2 : One Client - 10 Command 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -6324746372207349420 block_id: 6409026750145148174 Transaction: ['c1 - 1']
+New Commit: v2 ledger_state_id: -6370378240140971805 block_id: 6262802005852003251 Transaction: ['c1 - 2']
+New Commit: v2 ledger_state_id: 6899823966726237371 block_id: 7805104503232730123 Transaction: ['c1 - 3']
+New Commit: v2 ledger_state_id: -1819980811525116196 block_id: -8672810590114103504 Transaction: ['c1 - 4']
+New Commit: v2 ledger_state_id: 5844890071046377328 block_id: -5411291796809575197 Transaction: ['c1 - 5']
+New Commit: v2 ledger_state_id: 5676993809253951313 block_id: -9010833522273111565 Transaction: ['c1 - 6']
+New Commit: v2 ledger_state_id: 8225622979885227257 block_id: -1062766633477854004 Transaction: ['c1 - 7']
+New Commit: v2 ledger_state_id: -2478346220215398481 block_id: 623359008720813395 Transaction: ['c1 - 8']
+New Commit: v2 ledger_state_id: 1041998907958962284 block_id: 4564904395223756961 Transaction: ['c1 - 9']
+ 
+ TEST CASE 3 : 3 Clients - 1 Command  
+ 
+
+New Commit: v2 ledger_state_id: 7874514024160674014 block_id: -3764889937760210086 Transaction: ['c3 - 0']
+New Commit: v2 ledger_state_id: 5770761793411578372 block_id: 157667465885252683 Transaction: ['c2 - 0', 'c1 - 0']
+ 
+ TEST CASE 4 : 3 Client - 3 commands with 1 validator timeout 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -8893789859069487746 block_id: -7536235335744257229 Transaction: ['c2 - 0', 'c3 - 0', 'c1 - 1']
+New Commit: v2 ledger_state_id: 2089574451409939111 block_id: 3979762248709730217 Transaction: ['c3 - 1', 'c2 - 1', 'c1 - 2']
+New Commit: v2 ledger_state_id: -6024907282850217233 block_id: 623783276819490818 Transaction: ['c2 - 2', 'c3 - 2']
+ 
+ TEST CASE 5 : 1 Client - 3 commands with 3 validator timeout. TC is formed 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -1897374284240382201 block_id: 1161907091131065337 Transaction: ['c1 - 1', 'c1 - 2']
+ 
+ TEST CASE 6 : 2 Clients - 2 Command. Number of validators - 7 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -7757997124584946243 block_id: -7358046873431336484 Transaction: ['c2 - 0', 'c2 - 1']
+New Commit: v2 ledger_state_id: -5727411660821229215 block_id: 1961357903783977058 Transaction: ['c1 - 1']
+ 
+ TEST CASE 7 : One Client - 3 Commands 
+ 
+
+New Commit: v2 ledger_state_id: -4441755595339935131 block_id: -2848411058636968784 Transaction: ['c1 - 0']
+New Commit: v2 ledger_state_id: -6324746372207349420 block_id: -2868100983501701990 Transaction: ['c1 - 1']
+New Commit: v2 ledger_state_id: -6370378240140971805 block_id: -4248008011808340525 Transaction: ['c1 - 2']
