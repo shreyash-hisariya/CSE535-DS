@@ -1,0 +1,14 @@
+######################## Logger for Client: c3 ######################## 
+
+[INFO]: 2021-10-18 00:46:51   		 [ Client: c3 sending request to all the validators. REQUEST - c3 - 0 ]
+[INFO]: 2021-10-18 00:46:55   		 [ Client: c3 received result for the command from the validator v2 for  command c3 - 0 ]
+[INFO]: 2021-10-18 00:46:55   		 [ Client: c3 terminating. ]
+######################## Logger for Client: c3 ######################## 
+
+[INFO]: 2021-10-18 00:46:55   		 [ Client: c3 sending request to all the validators. REQUEST - c3 - 0 ]
+[INFO]: 2021-10-18 00:46:57   		 [ Client: c3 sending request to all the validators. REQUEST - c3 - 1 ]
+[INFO]: 2021-10-18 00:46:59   		 [ Client: c3 sending request to all the validators. REQUEST - c3 - 2 ]
+[INFO]: 2021-10-18 00:47:05   		 [ Client: c3 received result for the command from the validator v2 for  command c3 - 0 ]
+[INFO]: 2021-10-18 00:47:05   		 [ Client: c3 received result for the command from the validator v2 for  command c3 - 1 ]
+[INFO]: 2021-10-18 00:47:05   		 [ Client: c3 received result for the command from the validator v4 for  command c3 - 2 ]
+[INFO]: 2021-10-18 00:47:05   		 [ Client: c3 terminating. ]
